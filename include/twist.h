@@ -7,7 +7,7 @@ namespace cube {
 	//specifies a twist made to a cube
 	class Twist {
 		public:
-			//specifies the rotation of the twist - either 90, -90, or 180 degrees
+			//specifies the rotation of the twist - either 90 or -90 degrees
 			const int degrees;
 			
 			//specifies the side of the cube to be rotated
