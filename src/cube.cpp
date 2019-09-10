@@ -61,10 +61,10 @@ void Cube::rotate(const Twist& move) {
 	}
 }
 
-std::vector<std::vector<Color>> Cube::get_face(const Face face) {
+std::vector<std::vector<Color>> Cube::get_face(const Face face) const {
 	std::vector<std::vector<Color>> face_colors;
 
-	for (const auto& row : CubeManipulator<Piece>::find_layer(cube, face, 0)) {
+	for (const auto& row : CubeManipulator<Piece>::const_find_layer(cube, face, 0)) {
 		face_colors.push_back(std::vector<Color>());
 		for (const auto piece_ptr : row) {
 			face_colors.back().push_back(piece_ptr -> get_face(face));

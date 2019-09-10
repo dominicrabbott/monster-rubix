@@ -25,7 +25,7 @@ namespace cube {
 			const Piece& get_piece(int x, int y, int z) const {return cube[x][y][z];}
 
 			//retuns the colors that are present on the given face
-			std::vector<std::vector<Color>> get_face(const Face face);
+			std::vector<std::vector<Color>> get_face(const Face face) const;
 
 	};
 }

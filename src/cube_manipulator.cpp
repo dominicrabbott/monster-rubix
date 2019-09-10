@@ -48,47 +48,73 @@ std::vector<std::vector<T*>> CubeManipulator<T>::find_layer(std::vector<std::vec
 		result.push_back(std::vector<T*>());
 
 		for (int j = 0; j < cube.size(); j++) {
-			int coords[] = {0,0,0};
-
-			switch (face) {
-				case Face::FRONT:
-					coords[0] = i;
-					coords[1] = j;
-					coords[2] = cube.size() - 1 - layer;
-					break;
-				case Face::BACK:
-					coords[0] = i;
-					coords[1] = j;
-					coords[2] = layer;
-					break;
-				case Face::TOP:
-					coords[0] = i;
-					coords[1] = cube.size() - 1 - layer;
-					coords[2] = j;
-					break;
-				case Face::BOTTOM:
-					coords[0] = i;
-					coords[1] = layer;
-					coords[2] = j;
-					break;
-				case Face::RIGHT:
-					coords[0] = cube.size() - 1 - layer;
-					coords[1] = i;
-					coords[2] = j;
-					break;
-				case Face::LEFT:
-					coords[0] = layer;
-					coords[1] = i;
-					coords[2] =j;
-					break;
-
-			};
-
+			std::array<int, 3> coords = layer_coords(i,j,face,layer,cube.size());
+			
 			result[i].push_back(&cube[coords[0]][coords[1]][coords[2]]);	
 		}	
 	}
 
 	return result;
 }
+
+template <typename T>
+std::vector<std::vector<const T*>> CubeManipulator<T>::const_find_layer(const std::vector<std::vector<std::vector<T>>>& cube, const Face face, const int layer) {
+	std::vector<std::vector<const T*>> result;
+
+
+	for (int i = 0; i < cube.size(); i++) {
+		result.push_back(std::vector<const T*>());
+
+		for (int j = 0; j < cube.size(); j++) {
+			std::array<int, 3> coords = layer_coords(i,j,face,layer,cube.size());
+			
+			result[i].push_back(&cube[coords[0]][coords[1]][coords[2]]);	
+		}	
+	}
+
+	return result;
+
+}
+
+template <typename T>
+std::array<int, 3> CubeManipulator<T>::layer_coords(const int i, const int j, const Face face, const int layer, const int cube_size) {
+	std::array<int, 3> coords = {0,0,0};
+
+	switch (face) {
+		case Face::FRONT:
+			coords[0] = i;
+			coords[1] = j;
+			coords[2] = cube_size - 1 - layer;
+			break;
+		case Face::BACK:
+			coords[0] = i;
+			coords[1] = j;
+			coords[2] = layer;
+			break;
+		case Face::TOP:
+			coords[0] = i;
+			coords[1] = cube_size - 1 - layer;
+			coords[2] = j;
+			break;
+		case Face::BOTTOM:
+			coords[0] = i;
+			coords[1] = layer;
+			coords[2] = j;
+			break;
+		case Face::RIGHT:
+			coords[0] = cube_size - 1 - layer;
+			coords[1] = i;
+			coords[2] = j;
+			break;
+		case Face::LEFT:
+			coords[0] = layer;
+			coords[1] = i;
+			coords[2] =j;
+			break;
+
+	};
+
+	return coords;
+} 
 
 template class CubeManipulator<Piece>;
