@@ -43,6 +43,7 @@ template <typename T>
 std::vector<std::vector<T*>> CubeManipulator<T>::find_layer(std::vector<std::vector<std::vector<T>>>& cube, const Face face, const int layer) {
 	std::vector<std::vector<T*>> result;
 
+
 	for (int i = 0; i < cube.size(); i++) {
 		result.push_back(std::vector<T*>());
 
@@ -53,27 +54,33 @@ std::vector<std::vector<T*>> CubeManipulator<T>::find_layer(std::vector<std::vec
 				case Face::FRONT:
 					coords[0] = i;
 					coords[1] = j;
-					coords[2] = cube.size() - layer;
+					coords[2] = cube.size() - 1 - layer;
+					break;
 				case Face::BACK:
 					coords[0] = i;
 					coords[1] = j;
 					coords[2] = layer;
+					break;
 				case Face::TOP:
 					coords[0] = i;
-					coords[1] = cube.size() - layer;
+					coords[1] = cube.size() - 1 - layer;
 					coords[2] = j;
+					break;
 				case Face::BOTTOM:
 					coords[0] = i;
 					coords[1] = layer;
 					coords[2] = j;
+					break;
 				case Face::RIGHT:
-					coords[0] = cube.size() - layer;
+					coords[0] = cube.size() - 1 - layer;
 					coords[1] = i;
 					coords[2] = j;
+					break;
 				case Face::LEFT:
 					coords[0] = layer;
 					coords[1] = i;
 					coords[2] =j;
+					break;
 
 			};
 
