@@ -2,6 +2,7 @@ material orange_sticker {
 	technique {
 		pass {
 			texture_unit {
+				filtering none
 				texture orange_sticker.png
 			}
 		}

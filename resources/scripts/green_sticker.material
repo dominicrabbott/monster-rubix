@@ -3,6 +3,7 @@ material green_sticker {
 		pass {
 			texture_unit {
 				texture green_sticker.png
+				filtering none
 			}
 		}
 	}

@@ -2,6 +2,7 @@ material white_sticker {
 	technique {
 		pass {
 			texture_unit {
+				filtering none
 				texture white_sticker.png
 			}
 		}
