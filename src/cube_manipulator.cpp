@@ -3,6 +3,7 @@
 #include "cube_manipulator.h"
 #include "face.h"
 #include "piece.h"
+#include "Ogre.h"
 
 using namespace cube;
 
@@ -92,14 +93,14 @@ std::array<int, 3> CubeManipulator<T>::layer_coords(const int i, const int j, co
 			coords[2] = layer;
 			break;
 		case Face::TOP:
-			coords[0] = i;
+			coords[0] = j;
 			coords[1] = cube_size - 1 - layer;
-			coords[2] = j;
+			coords[2] = i;
 			break;
 		case Face::BOTTOM:
-			coords[0] = i;
+			coords[0] = j;
 			coords[1] = layer;
-			coords[2] = j;
+			coords[2] = i;
 			break;
 		case Face::RIGHT:
 			coords[0] = cube_size - 1 - layer;
@@ -109,7 +110,7 @@ std::array<int, 3> CubeManipulator<T>::layer_coords(const int i, const int j, co
 		case Face::LEFT:
 			coords[0] = layer;
 			coords[1] = i;
-			coords[2] =j;
+			coords[2] = j;
 			break;
 
 	};
@@ -118,3 +119,4 @@ std::array<int, 3> CubeManipulator<T>::layer_coords(const int i, const int j, co
 } 
 
 template class CubeManipulator<Piece>;
+template class CubeManipulator<Ogre::SceneNode*>;
