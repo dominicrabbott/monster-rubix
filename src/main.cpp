@@ -1,5 +1,9 @@
-#include <iostream>
+#include "ui_manager.h"
+#include "Ogre.h"
 
 int main() {
-	std::cout << "Oh, why, hello there"  << std::endl;
+	ui::UIManager man;
+	man.initApp();
+	man.getRoot() -> startRendering();
+	man.closeApp();
 }
