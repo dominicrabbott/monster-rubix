@@ -1,0 +1,9 @@
+material black {
+	technique {
+		pass {
+			texture_unit {
+				texture black.png
+			}
+		}
+	}
+}

@@ -1,0 +1,9 @@
+material orange_sticker {
+	technique {
+		pass {
+			texture_unit {
+				texture orange_sticker.png
+			}
+		}
+	}
+}

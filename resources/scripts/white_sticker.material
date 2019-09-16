@@ -1,0 +1,9 @@
+material white_sticker {
+	technique {
+		pass {
+			texture_unit {
+				texture white_sticker.png
+			}
+		}
+	}
+}
