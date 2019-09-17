@@ -1,8 +1,8 @@
-#include "ui_manager.h"
+#include "keyboard_ui_manager.h"
 #include "Ogre.h"
 
 int main() {
-	ui::UIManager man;
+	ui::KeyboardUIManager man;
 	man.initApp();
 	man.getRoot() -> startRendering();
 	man.closeApp();
