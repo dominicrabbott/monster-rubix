@@ -3,12 +3,10 @@
 
 #include <vector>
 #include <regex>
+#include <stack>
 
 #include "ui_manager.h"
-
-namespace cube {
-	class Twist;
-}
+#include "twist.h"
 
 class string;
 
@@ -21,6 +19,9 @@ namespace ui {
 
 			//used to track whether shift is pressed
 			bool shift_pressed = false;
+
+			//holds previously made twists so moves to the cube can be undone
+			std::stack<cube::Twist> prev_moves;
 
 			//when a key is pressed, this function appends the character to the 'keysPressed' string. If the key pressed is 
 			//Enter, the input is parsed into a twist that is then made to the cube. Also moves the camera back to 

@@ -24,6 +24,19 @@ bool KeyboardUIManager::keyPressed(const OgreBites::KeyboardEvent& event) {
 		camera_man -> getCamera() -> lookAt(Vector3(0,0,0), Node::TransformSpace::TS_WORLD);
 	}
 
+	else if (event.keysym.sym == 'c') {
+		keys_pressed = "";	
+	}
+
+	else if (event.keysym.sym == 'u') {
+		if (prev_moves.size() > 0) {
+			cube::Twist& move = prev_moves.top();
+			cube -> rotate(cube::Twist(-move.degrees, move.face, move.layer, move.wide_turn));
+			prev_moves.pop();
+		}
+	}
+
+
 	else if (event.keysym.sym == OgreBites::SDLK_LSHIFT) {
 		shift_pressed = true;	
 	}
@@ -50,7 +63,7 @@ bool KeyboardUIManager::keyReleased(const OgreBites::KeyboardEvent& event) {
 
 
 void KeyboardUIManager::twist() {
-	static std::string faces = "([RrLlDdUuFfBb])";
+	static std::string faces = "([RrLlDdTtFfBb])";
 	static std::regex form1(faces);
 	static std::regex form2("(\\d+)" + faces + "(w?)");
 
@@ -66,7 +79,7 @@ void KeyboardUIManager::twist() {
 	bool valid = false;
 
 	if (std::regex_match(keys_pressed, matches, form1)) {
-		layer_str = "0";
+		layer_str = "1";
 		face_char = static_cast<std::string>(matches[1])[0];
 		wide_turn = false;
 		valid = true;
@@ -83,7 +96,7 @@ void KeyboardUIManager::twist() {
 		static std::unordered_map<char, cube::Face> notation_map = {
 			{'R', cube::Face::RIGHT},
 			{'L', cube::Face::LEFT},
-			{'U', cube::Face::TOP},
+			{'T', cube::Face::TOP},
 			{'D', cube::Face::BOTTOM},
 			{'F', cube::Face::FRONT},
 			{'B', cube::Face::BACK},	
@@ -98,10 +111,13 @@ void KeyboardUIManager::twist() {
 			face = notation_map[face_char];	
 		}
 
-		layer = std::stoi(layer_str);
+		layer = std::stoi(layer_str) - 1;
 
 		if (layer < size) {
-			cube -> rotate(cube::Twist(degrees, face, layer, wide_turn));
+			cube::Twist move(degrees, face, layer, wide_turn);
+
+			prev_moves.push(move);
+			cube -> rotate(move);
 		}
 	}
 }
