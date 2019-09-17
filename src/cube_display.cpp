@@ -19,7 +19,7 @@ CubeDisplay::Rotation::Rotation(const cube::Twist& move, const int cube_size) {
 	static std::unordered_map<cube::Face, cube::Face> opposing_faces = {
 		{cube::Face::RIGHT, cube::Face::LEFT},
 		{cube::Face::TOP, cube::Face::BOTTOM},
-		{cube::Face::BACK, cube::Face::FRONT},
+		{cube::Face::FRONT, cube::Face::BACK},
 	};
 	
 	to_layer = move.layer;
@@ -130,7 +130,7 @@ void CubeDisplay::create_skeleton(const int size) {
 
 		skeleton[cube::Face::LEFT].push_back(skeleton_node_x);
 		skeleton[cube::Face::BOTTOM].push_back(skeleton_node_y);
-		skeleton[cube::Face::FRONT].push_back(skeleton_node_z);
+		skeleton[cube::Face::BACK].push_back(skeleton_node_z);
 	}
 
 }
