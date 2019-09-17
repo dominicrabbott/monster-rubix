@@ -63,7 +63,7 @@ void CubeDisplay::frameRendered(const Ogre::FrameEvent& event)  {
 			}
 		}
 		
-		int degrees_per_frame = curr_rot.total_degrees/90;
+		int degrees_per_frame = curr_rot.total_degrees/15;
 
 		for (int i = curr_rot.from_layer; i<= curr_rot.to_layer; i++) {
 			skeleton[curr_rot.axis][i] -> roll(Degree(degrees_per_frame));
