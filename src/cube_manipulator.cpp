@@ -2,7 +2,6 @@
 
 #include "cube_manipulator.h"
 #include "face.h"
-#include "piece.h"
 #include "Ogre.h"
 
 using namespace cube;
@@ -118,5 +117,4 @@ std::array<int, 3> CubeManipulator<T>::layer_coords(const int i, const int j, co
 	return coords;
 } 
 
-template class CubeManipulator<Piece>;
 template class CubeManipulator<Ogre::SceneNode*>;

@@ -8,8 +8,6 @@
 #include "Ogre.h"
 #include "color.h"
 #include "twist.h"
-#include "piece.h"
-#include "cube.h"
 
 using namespace ui;
 using namespace Ogre;
@@ -83,8 +81,6 @@ void CubeDisplay::frameRendered(const Ogre::FrameEvent& event)  {
 void CubeDisplay::create_cube(const int size) {
 	create_skeleton(size);
 
-	cube::Cube initial_cube(size);
-
 	float translation = static_cast<float>(size*piece_size)/2;
 
 	for (int x = 0; x < size; x++) {
@@ -92,13 +88,41 @@ void CubeDisplay::create_cube(const int size) {
 		for (int y = 0; y < size; y++) {
 			cube[x].push_back(std::vector<SceneNode*>());
 			for (int z = 0; z < size; z++) {
-				SceneNode* cube_node = create_piece(initial_cube.get_piece(x,y,z));
+				SceneNode* cube_node = create_piece(create_piece_colors(Vector3(x,y,z), size));
 				cube_node -> setPosition(x*piece_size-translation, y*piece_size-translation, z*piece_size-translation);
 
 				cube[x][y].push_back(cube_node);
 			}	
 		}	
 	}
+}
+
+std::unordered_map<cube::Face, cube::Color> CubeDisplay::create_piece_colors(const Vector3 coords, const int size) {
+	std::unordered_map<cube::Face, cube::Color> result;
+
+	if (coords[0] == 0) {
+		result.insert(std::make_pair(cube::Face::LEFT, cube::Color::GREEN));	
+	}
+	else if (coords[0] == size-1) {
+		result.insert(std::make_pair(cube::Face::RIGHT, cube::Color::BLUE));	
+	}
+	
+	if (coords[1] == 0) {
+		result.insert(std::make_pair(cube::Face::BOTTOM, cube::Color::ORANGE));	
+	}
+	else if (coords[1] == size-1) {
+		result.insert(std::make_pair(cube::Face::TOP, cube::Color::RED));	
+	}
+	
+	if (coords[2] == 0) {
+		result.insert(std::make_pair(cube::Face::BACK, cube::Color::WHITE));	
+	}
+	else if (coords[2] == size-1) {
+		result.insert(std::make_pair(cube::Face::FRONT, cube::Color::YELLOW));	
+	}
+	
+
+	return result;
 }
 
 void CubeDisplay::adopt_scene_node(SceneNode* child, SceneNode* new_parent) {
@@ -135,7 +159,7 @@ void CubeDisplay::create_skeleton(const int size) {
 
 }
 
-SceneNode* CubeDisplay::create_piece(const cube::Piece& piece) {
+SceneNode* CubeDisplay::create_piece(const std::unordered_map<cube::Face, cube::Color>& piece) {
 
 	static std::unordered_map<cube::Color, std::string> materials = {
 		{cube::Color::GREEN, "green_sticker"},	
@@ -179,7 +203,12 @@ SceneNode* CubeDisplay::create_piece(const cube::Piece& piece) {
 	ManualObject* piece_entity = scene_mgr -> createManualObject();
 
 	for (const auto face : faces) {
-		piece_entity -> begin(materials[piece.get_face(face)], RenderOperation::OT_TRIANGLE_LIST);
+		std::string material = "black";
+		if (piece.count(face) > 0) {
+			material = materials[piece.at(face)];
+		}
+		
+		piece_entity -> begin(material, RenderOperation::OT_TRIANGLE_LIST);
 
 		for (int i = 0; i < 4; i++) {
 			std::vector<int>& vertex = verticies[face_verticies[face][i]];

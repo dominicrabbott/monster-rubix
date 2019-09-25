@@ -8,12 +8,8 @@
 #include "Ogre.h"
 #include "OgreInput.h"
 #include "face.h"
-#include "cube.h"
 #include "twist.h"
-
-namespace cube {
-	class Piece;
-}
+#include "color.h"
 
 namespace ui {
 
@@ -54,7 +50,11 @@ namespace ui {
 			void create_skeleton(const int size);
 			
 			//returns a pointer to a SceneNode that represents the given piece
-			Ogre::SceneNode* create_piece(const cube::Piece& piece);
+			Ogre::SceneNode* create_piece(const std::unordered_map<cube::Face, cube::Color>& face_colors);
+
+			//returns a map that represents the colors present on the piece of a cube located at
+			//the specified coordinates
+			std::unordered_map<cube::Face, cube::Color> create_piece_colors(const Ogre::Vector3 coords, const int size);
 
 			//when there is an ongoing rotation, thus function rotates the cube
 			//before every frame accordingly
