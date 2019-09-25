@@ -2,12 +2,11 @@
 
 #include "cube_manipulator.h"
 #include "face.h"
-#include "Ogre.h"
 
 using namespace cube;
+using namespace Ogre;
 
-template <typename T>
-void CubeManipulator<T>::transpose(const std::vector<std::vector<T*>>& matrix) {
+void CubeManipulator::transpose(const std::vector<std::vector<SceneNode**>>& matrix) {
 	using std::swap;
 	for (int i = 0; i < matrix.size()-1; i++) {
 		for (int j = i+1; j < matrix.size(); j++) {
@@ -16,8 +15,7 @@ void CubeManipulator<T>::transpose(const std::vector<std::vector<T*>>& matrix) {
 	}
 }
 
-template <typename T>
-void CubeManipulator<T>::reverse_rows(const std::vector<std::vector<T*>>& matrix) {
+void CubeManipulator::reverse_rows(const std::vector<std::vector<SceneNode**>>& matrix) {
 	using std::swap;
        	for (const auto& row : matrix) {
 	       for (int col = 0; col < row.size()/2; col++) {
@@ -26,8 +24,7 @@ void CubeManipulator<T>::reverse_rows(const std::vector<std::vector<T*>>& matrix
        	}
 }
 
-template <typename T>
-void CubeManipulator<T>::rotate(const std::vector<std::vector<T*>>& matrix, const int degrees) {
+void CubeManipulator::rotate(const std::vector<std::vector<SceneNode**>>& matrix, const int degrees) {
 	if (degrees == 90) {
 		transpose(matrix);
 		reverse_rows(matrix);	
@@ -39,13 +36,12 @@ void CubeManipulator<T>::rotate(const std::vector<std::vector<T*>>& matrix, cons
 	}
 }
 
-template <typename T>
-std::vector<std::vector<T*>> CubeManipulator<T>::find_layer(std::vector<std::vector<std::vector<T>>>& cube, const Face face, const int layer) {
-	std::vector<std::vector<T*>> result;
+std::vector<std::vector<SceneNode**>> CubeManipulator::find_layer(std::vector<std::vector<std::vector<SceneNode*>>>& cube, const Face face, const int layer) {
+	std::vector<std::vector<SceneNode**>> result;
 
 
 	for (int i = 0; i < cube.size(); i++) {
-		result.push_back(std::vector<T*>());
+		result.push_back(std::vector<SceneNode**>());
 
 		for (int j = 0; j < cube.size(); j++) {
 			std::array<int, 3> coords = layer_coords(i,j,face,layer,cube.size());
@@ -57,13 +53,11 @@ std::vector<std::vector<T*>> CubeManipulator<T>::find_layer(std::vector<std::vec
 	return result;
 }
 
-template <typename T>
-std::vector<std::vector<const T*>> CubeManipulator<T>::const_find_layer(const std::vector<std::vector<std::vector<T>>>& cube, const Face face, const int layer) {
-	std::vector<std::vector<const T*>> result;
-
+std::vector<std::vector<SceneNode* const*>> CubeManipulator::const_find_layer(const std::vector<std::vector<std::vector<SceneNode*>>>& cube, const Face face, const int layer) {
+	std::vector<std::vector<SceneNode* const*>> result;
 
 	for (int i = 0; i < cube.size(); i++) {
-		result.push_back(std::vector<const T*>());
+		result.push_back(std::vector<SceneNode* const*>());
 
 		for (int j = 0; j < cube.size(); j++) {
 			std::array<int, 3> coords = layer_coords(i,j,face,layer,cube.size());
@@ -76,8 +70,7 @@ std::vector<std::vector<const T*>> CubeManipulator<T>::const_find_layer(const st
 
 }
 
-template <typename T>
-std::array<int, 3> CubeManipulator<T>::layer_coords(const int i, const int j, const Face face, const int layer, const int cube_size) {
+std::array<int, 3> CubeManipulator::layer_coords(const int i, const int j, const Face face, const int layer, const int cube_size) {
 	std::array<int, 3> coords = {0,0,0};
 
 	switch (face) {
@@ -116,5 +109,3 @@ std::array<int, 3> CubeManipulator<T>::layer_coords(const int i, const int j, co
 
 	return coords;
 } 
-
-template class CubeManipulator<Ogre::SceneNode*>;

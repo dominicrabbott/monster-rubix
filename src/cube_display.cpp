@@ -45,14 +45,12 @@ void CubeDisplay::rotate(const cube::Twist& move) {
 }
 
 void CubeDisplay::frameRendered(const Ogre::FrameEvent& event)  {
-	typedef cube::CubeManipulator<SceneNode*> CubeManipulator;
-
 	if (pending_rotations.size() > 0) {
 		Rotation& curr_rot = pending_rotations[0];
 
 		if (curr_rot.remaining_degrees == curr_rot.total_degrees) {
 			for (int i = curr_rot.from_layer; i<= curr_rot.to_layer; i++) {
-				std::vector<std::vector<SceneNode**>> layer = CubeManipulator::find_layer(cube, curr_rot.axis, i);
+				std::vector<std::vector<SceneNode**>> layer = cube::CubeManipulator::find_layer(cube, curr_rot.axis, i);
 				for (auto& ptr_vec : layer) {
 					for (auto node_ptr : ptr_vec) {
 						adopt_scene_node(*node_ptr, skeleton[curr_rot.axis][i]);
@@ -71,7 +69,7 @@ void CubeDisplay::frameRendered(const Ogre::FrameEvent& event)  {
 		
 		if (curr_rot.remaining_degrees == 0) {
 			for (int i = curr_rot.from_layer; i <= curr_rot.to_layer; i++) {
-				CubeManipulator::rotate(CubeManipulator::find_layer(cube, curr_rot.axis, i), curr_rot.total_degrees);
+				cube::CubeManipulator::rotate(cube::CubeManipulator::find_layer(cube, curr_rot.axis, i), curr_rot.total_degrees);
 			}
 			pending_rotations.pop_front();	
 		}
