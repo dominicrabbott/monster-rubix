@@ -7,6 +7,9 @@
 
 namespace cube {
 	enum class Face;
+}
+
+namespace ui {
 
 	//performs nessesary matrix operations to manipulate a cube
 	class CubeManipulator {
@@ -18,17 +21,17 @@ namespace cube {
 			static void reverse_rows(const std::vector<std::vector<Ogre::SceneNode**>>& matrix);
 
 			//helper function for CubeManipulator::find_layer
-			static std::array<int, 3> layer_coords(const int i, const int j, const Face face, const int layer, const int cube_size);
+			static std::array<int, 3> layer_coords(const int i, const int j, const cube::Face face, const int layer, const int cube_size);
 		public:
 			//performs the given rotation on the given matrix. Pointers to the elements that are to be
 			//rotated are accepted as arguments
 			static void rotate(const std::vector<std::vector<Ogre::SceneNode**>>& matrix, const int degrees);
 
 			//returns a matrix that contains pointers to the elements that make up the specified layer in the given cube
-			static std::vector<std::vector<Ogre::SceneNode**>> find_layer(std::vector<std::vector<std::vector<Ogre::SceneNode*>>>& cube, const Face face, const int layer);
+			static std::vector<std::vector<Ogre::SceneNode**>> find_layer(std::vector<std::vector<std::vector<Ogre::SceneNode*>>>& cube, const cube::Face face, const int layer);
 			
 			//returns a matrix that contains const pointers to the elements that make up the specified layer in the given cube
-			static std::vector<std::vector<Ogre::SceneNode* const*>> const_find_layer(const std::vector<std::vector<std::vector<Ogre::SceneNode*>>>& cube, const Face face, const int layer);
+			static std::vector<std::vector<Ogre::SceneNode* const*>> const_find_layer(const std::vector<std::vector<std::vector<Ogre::SceneNode*>>>& cube, const cube::Face face, const int layer);
 	};
 }
 

@@ -1,9 +1,9 @@
 #include <iostream>
 #include "color.h"
 
-using namespace cube;
+using namespace ui;
 
-std::ostream& cube::operator<<(std::ostream& stream, const Color& color) {
+std::ostream& ui::operator<<(std::ostream& stream, const Color& color) {
 	switch (color) {
 		case Color::GREEN:
 			stream << "Green";
