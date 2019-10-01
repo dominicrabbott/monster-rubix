@@ -1,4 +1,5 @@
 #include <unordered_map>
+#include <cassert>
 
 #include "cube_manipulator.h"
 #include "face.h"
@@ -25,6 +26,8 @@ void CubeManipulator::reverse_rows(const std::vector<std::vector<SceneNode**>>& 
 }
 
 void CubeManipulator::rotate(const std::vector<std::vector<SceneNode**>>& matrix, const int degrees) {
+	assert(degrees == 90 || degrees == -90 && "Only rotations of 90 and -90 degrees are allowed");
+
 	if (degrees == 90) {
 		transpose(matrix);
 		reverse_rows(matrix);	
