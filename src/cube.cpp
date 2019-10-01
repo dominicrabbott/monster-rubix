@@ -28,23 +28,62 @@ std::unordered_map<Face, Face> Cube::opposing_faces = {
 };
 
 
-
-
-Cube::Cube(const int size) : size(size), centers(new unsigned char[(size-2)*(size-2)*6]) , edges(new unsigned char[12*(size-2)]), corners(new unsigned char[8]) {
+Cube::Cube(const int size) : 
+			size(size), 
+			centers(std::make_unique<unsigned char[]>(std::pow(size-2,2)*6)), 
+			edges(std::make_unique<unsigned char[]>((size-2)*12)),
+			corners(std::make_unique<unsigned char[]>(8)) {
 	assert(size <= 8 && "Cube class can only represent 8x8x8 cubes or smaller");
 
 	for (int i = 0; i < std::pow(size-2,2)*6; i++) {
 		centers[i] = i;
 	}
-
 	for (int i = 0; i < 12*(size-2); i++) {
 		edges[i] = i;
 	}
-
 	for (int i = 0; i < 8; i++) {
 		corners[i] = i;
 	}
-} 
+}
+
+Cube::Cube(const Cube& cube) : 
+	size(cube.size), 
+	centers(copy_pieces(cube.centers.get(), std::pow(size-2,2)*6)), 
+	edges(copy_pieces(cube.edges.get(), 12*(size-2))), 
+	corners(copy_pieces(cube.corners.get(), 8)) {}
+
+Cube& Cube::operator=(const Cube& cube) {
+	int center_count = std::pow(cube.size-2,2)*6;
+	int edge_count = 12*(cube.size-2);
+	int corner_count = 8;
+
+	if (cube.size != size) {
+		centers = std::make_unique<unsigned char[]>(center_count);
+		edges = std::make_unique<unsigned char[]>(edge_count);
+	}
+
+	for (int i = 0; i < center_count; i++) {
+		centers[i] = cube.centers[i];	
+	}
+	for (int i = 0; i < edge_count; i++) {
+		edges[i] = cube.edges[i];	
+	}
+	for (int i = 0; i < corner_count; i++) {
+		corners[i] = cube.corners[i];	
+	}
+
+	return *this;
+}
+
+std::unique_ptr<unsigned char[]> Cube::copy_pieces(const unsigned char* array, const int size) {
+	std::unique_ptr<unsigned char[]> result = std::make_unique<unsigned char[]>(size);
+
+	for (int i = 0; i < size; i++) {
+		result[i] = array[i];	
+	}
+
+	return result;
+}
 
 void Cube::rotate_corner(const int corner) {
 	int orientation = (get_corner_orientation(corner) + 1) % 3;

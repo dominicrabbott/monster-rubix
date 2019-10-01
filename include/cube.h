@@ -58,9 +58,18 @@ namespace cube {
 			//performs a 90 degree rotation on the specified slice of the cube
 			void rotate_slice(const Face face, const int layer);
 
+			//copies an array of pieces and returns a unique_ptr to the data
+			std::unique_ptr<unsigned char[]> copy_pieces(const unsigned char* array, const int size); 
+
 		public:
 			//constructs a solved cube of the given size
 			Cube(const int size);
+
+			//copy constructor
+			Cube(const Cube& cube);
+
+			//assignment operator
+			Cube& operator=(const Cube& cube);
 
 			//getters for the state of the cube
 			int get_size() {return size;}
