@@ -15,9 +15,9 @@ using namespace Ogre;
 
 CubeDisplay::Rotation::Rotation(const cube::Twist& move, const int cube_size) {
 	static std::unordered_map<cube::Face, cube::Face> opposing_faces = {
-		{cube::Face::RIGHT, cube::Face::LEFT},
-		{cube::Face::TOP, cube::Face::BOTTOM},
-		{cube::Face::FRONT, cube::Face::BACK},
+		{cube::Face::LEFT, cube::Face::RIGHT},
+		{cube::Face::BOTTOM, cube::Face::TOP},
+		{cube::Face::BACK, cube::Face::FRONT},
 	};
 	
 	to_layer = move.layer;
@@ -160,9 +160,9 @@ void CubeDisplay::create_skeleton(const int size) {
 		skeleton_node_x -> lookAt(Vector3(1,0,0), Node::TransformSpace::TS_LOCAL);
 		skeleton_node_x -> setPosition(f*piece_size,0,0);
 
-		skeleton[cube::Face::LEFT].push_back(skeleton_node_x);
-		skeleton[cube::Face::BOTTOM].push_back(skeleton_node_y);
-		skeleton[cube::Face::BACK].push_back(skeleton_node_z);
+		skeleton[cube::Face::RIGHT].push_back(skeleton_node_x);
+		skeleton[cube::Face::TOP].push_back(skeleton_node_y);
+		skeleton[cube::Face::FRONT].push_back(skeleton_node_z);
 	}
 
 }

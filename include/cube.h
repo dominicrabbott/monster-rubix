@@ -5,8 +5,6 @@
 #include <memory>
 #include "face.h"
 
-int main();
-
 namespace cube {
 	class Twist;
 
@@ -15,11 +13,15 @@ namespace cube {
 		private:
 			//numbers the faces of the cube
 			static std::unordered_map<Face, int> face_numbers;
-			//specifies the faces that is opposite each face
-			static std::unordered_map<Face, Face> opposing_faces;
 
 			//the size of the cube
-			const unsigned char size;
+			unsigned char size;
+
+			//width of an edge
+			unsigned char edge_width;
+
+			//number of pieces in a center
+			unsigned char center_size;
 
 			//the stored representation of the pieces
 			//
@@ -44,7 +46,14 @@ namespace cube {
 			void flip_edge(const int edge) {edges[edge] ^= 0x80;}
 
 			//rotates a corner clockwise
-			void rotate_corner(const int corner);
+			//
+			//a rotation of 2 performs a counter-clockwise twist, and a rotation
+			//of 1 a clockwise twist
+			void rotate_corner(const int corner, const int rotation) {
+				int orientation = (get_corner_orientation(corner)+rotation)%3;
+				corners[corner] &= 0xE7;
+				corners[corner] |= orientation << 3;	
+			}
 
 			//transposes the matrix that is made of the centers of a face
 			void transpose_center(const Face face);
@@ -52,11 +61,17 @@ namespace cube {
 			//reverses the rows in the matrix that is made of the centers of the face
 			void reverse_center_rows(const Face face);
 
+			//circular-shifts the pieces in the given array located at the given indecies.
+			//A 90 degree rotation causes 1 circular shift, and a -90 degree rotation 3 circular
+			//shifts. The offset value is added to each of the indecies, making it easier to 
+			//rotate the nth edge or the nth center, where n != 1
+			void shift_pieces(unsigned char* pieces, int* indecies, int degrees, int offset);
+
 			//performs a 90 degree rotation on the outermost layer of the given face
-			void rotate_face(const Face face);
+			void rotate_face(const Face face, const int degrees);
 
 			//performs a 90 degree rotation on the specified slice of the cube
-			void rotate_slice(const Face face, const int layer);
+			void rotate_slice(const Face face, const int layer, const int degrees);
 
 			//copies an array of pieces and returns a unique_ptr to the data
 			std::unique_ptr<unsigned char[]> copy_pieces(const unsigned char* array, const int size); 
@@ -65,14 +80,12 @@ namespace cube {
 			//constructs a solved cube of the given size
 			Cube(const int size);
 
-			//copy constructor
 			Cube(const Cube& cube);
 
-			//assignment operator
 			Cube& operator=(const Cube& cube);
 
 			//getters for the state of the cube
-			int get_size() {return size;}
+			int get_size() const {return size;}
 			int get_center_pos(const int center) const {return centers[center];}
 			int get_edge_pos(const int edge) const {return edges[edge] & 0x7F;}
 			int get_corner_pos(const int corner) const {return corners[corner] & 7;}
@@ -82,10 +95,17 @@ namespace cube {
 			//performs a rotation on the cube
 			void rotate(const Twist& twist);
 
-			//function to allow for the object to be placed in a unordered_set
-			bool operator==(const Cube& cube) const	{
-				return centers == cube.centers && edges == cube.edges && corners == cube.corners;
-			}
+			bool operator==(const Cube& cube) const;
+			Cube(Cube&& cube) = default;
+
+			friend std::hash<Cube>;
+	};
+}
+
+namespace std {
+	template<>
+	struct hash<cube::Cube> {
+		size_t operator()(const cube::Cube& cube) const;
 	};
 }
 
