@@ -41,12 +41,19 @@ CubeDisplay::CubeDisplay(const int size, SceneManager* scene_mgr) : scene_mgr(sc
 }
 
 void CubeDisplay::rotate(const cube::Twist& move) {
+	std::unique_lock<std::mutex> lock(mex);
 	pending_rotations.push_back(Rotation(move, cube.size()));
 }
 
 void CubeDisplay::frameRendered(const Ogre::FrameEvent& event)  {
-	if (pending_rotations.size() > 0) {
+	mex.lock();
+	int queue_size = pending_rotations.size();
+	mex.unlock();
+
+	if (queue_size > 0) {
+		mex.lock();
 		Rotation& curr_rot = pending_rotations[0];
+		mex.unlock();
 
 		if (curr_rot.remaining_degrees == curr_rot.total_degrees) {
 			for (int i = curr_rot.from_layer; i<= curr_rot.to_layer; i++) {
@@ -71,7 +78,10 @@ void CubeDisplay::frameRendered(const Ogre::FrameEvent& event)  {
 			for (int i = curr_rot.from_layer; i <= curr_rot.to_layer; i++) {
 				CubeManipulator::rotate(CubeManipulator::find_layer(cube, curr_rot.axis, i), curr_rot.total_degrees);
 			}
-			pending_rotations.pop_front();	
+
+			mex.lock();
+			pending_rotations.pop_front();
+			mex.unlock();
 		}
 	}
 }

@@ -11,6 +11,8 @@
 #include "twist.h"
 #include "color.h"
 
+class mutex;
+
 namespace ui {
 
 	class CubeDisplay : public OgreBites::InputListener {
@@ -28,6 +30,11 @@ namespace ui {
 				Rotation(const cube::Twist& move, const int cube_size);
 			};
 
+			//mutex used to enable the class to be thread-safe
+			std::mutex mex;
+
+			//pointer to the SceneManager that this class will
+			//use to draw a cube
 			Ogre::SceneManager* scene_mgr;
 			
 			//size of each piece of the cube	
