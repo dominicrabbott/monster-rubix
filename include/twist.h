@@ -34,6 +34,15 @@ namespace cube {
 			wide_turn(wide_turn), face(face), degrees(degrees), layer(layer) {
 				assert(degrees == 90 || degrees == -90 && "Degrees parameter must be 90 or -90");
 			}
+
+		bool operator==(const Twist& twist) const {
+			return  degrees == twist.degrees 
+				&& face == twist.face
+				&& layer == twist.layer 
+				&& wide_turn == twist.wide_turn;
+		}
+
+		bool operator!=(const Twist& twist) const {return !(*this == twist);}
 	};
 }
 
