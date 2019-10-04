@@ -206,11 +206,9 @@ SceneNode* CubeDisplay::create_piece(const std::unordered_map<cube::Face, Color>
 		{0,1},	
 	};
 
-	static cube::Face faces[] = {cube::Face::FRONT, cube::Face::BACK, cube::Face::RIGHT, cube::Face::LEFT, cube::Face::TOP, cube::Face::BOTTOM};
-
 	ManualObject* piece_entity = scene_mgr -> createManualObject();
 
-	for (const auto face : faces) {
+	for (const auto face : cube::ALL_FACES) {
 		std::string material = "black";
 		if (piece.count(face) > 0) {
 			material = materials[piece.at(face)];
