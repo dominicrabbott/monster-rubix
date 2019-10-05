@@ -121,3 +121,12 @@ void KeyboardUIManager::twist() {
 		}
 	}
 }
+
+int KeyboardUIManager::ask_size() {
+	std::cout << "Enter the size of the cube\n";
+
+	int size;
+	std::cin >> size;
+
+	return size;
+}

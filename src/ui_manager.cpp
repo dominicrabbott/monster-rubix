@@ -6,11 +6,6 @@
 using namespace ui;
 using namespace Ogre;
 
-UIManager::UIManager() : OgreBites::ApplicationContext("RubixII") {
-	std::cout << "Enter the size of the cube\n";
-	std::cin >> size;
-}
-
 void UIManager::setup() {
 	ResourceGroupManager::getSingletonPtr() -> addResourceLocation("./resources/images", "FileSystem");
 	ResourceGroupManager::getSingletonPtr() -> addResourceLocation("./resources/scripts", "FileSystem");

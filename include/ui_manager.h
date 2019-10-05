@@ -12,7 +12,7 @@ namespace ui {
 	
 	class UIManager : public OgreBites::ApplicationContext, public OgreBites::InputListener {
 		public:
-			UIManager();
+			UIManager(const int size) : size(size), OgreBites::ApplicationContext("RubixII") {};
 		
 		protected:
 			//pointer to CubeDisplay object that draws the cube
@@ -22,7 +22,7 @@ namespace ui {
 			std::unique_ptr<OgreBites::CameraMan> camera_man;
 
 			//size of the cube
-			int size;
+			const int size;
 
 			//sets the scene for the rubix cube and initializes the CubeDisplay pointer
 			void setup() override;

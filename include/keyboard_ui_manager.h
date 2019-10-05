@@ -33,6 +33,11 @@ namespace ui {
 
 			//makes a rotation to the cube based on the input from the user
 			void twist();
+
+			//queries the size of the cube from the user
+			int ask_size();
+		public:
+			KeyboardUIManager() : UIManager(ask_size()) {};
 	};
 }
 
