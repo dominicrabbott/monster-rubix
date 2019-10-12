@@ -9,29 +9,13 @@
 
 using namespace cube;
 
-std::unordered_map<Face, int> Cube::face_numbers = {
-	{Face::LEFT, 0},
-	{Face::TOP, 1},
-	{Face::BACK, 2},
-	{Face::BOTTOM, 3},
-	{Face::FRONT, 4},
-	{Face::RIGHT, 5},
-
-};
-
 Cube::Cube(const int size) : 
-	size(size),
-	edge_width(size-2),
-	center_size(std::pow(size-2,2)),
-	centers(std::make_unique<unsigned char[]>(center_size*6)), 
+	CubeBase(size),
 	edges(std::make_unique<unsigned char[]>(edge_width*12)),
 	corners(std::make_unique<unsigned char[]>(8)) {
 
 	assert(size <= 8 && "Cube class can only represent 8x8x8 cubes or smaller");
 
-	for (int i = 0; i < center_size*6; i++) {
-		centers[i] = i;
-	}
 	for (int i = 0; i < edge_width*12; i++) {
 		edges[i] = i;
 	}
@@ -41,19 +25,13 @@ Cube::Cube(const int size) :
 }
 
 Cube::Cube(const Cube& cube) : 
-	size(cube.size),
-	edge_width(cube.edge_width),
-	center_size(cube.center_size),
-	centers(copy_pieces(cube.centers.get(), center_size*6)), 
+	CubeBase(cube),
 	edges(copy_pieces(cube.edges.get(), edge_width*12)), 
 	corners(copy_pieces(cube.corners.get(), 8)) {}
 
 Cube& Cube::operator=(const Cube& cube) {
 	assert(cube.size == size && "Cube classes can only be set to objects of the same size");
 
-	for (int i = 0; i < center_size*6; i++) {
-		centers[i] = cube.centers[i];	
-	}
 	for (int i = 0; i < edge_width*12; i++) {
 		edges[i] = cube.edges[i];	
 	}
@@ -65,12 +43,6 @@ Cube& Cube::operator=(const Cube& cube) {
 }
 
 bool Cube::operator==(const Cube& cube) const {
-	for (int i = 0; i < center_size*6; i++) {
-		if (cube.centers[i] != centers[i]) {
-			return false;	
-		}	
-	}
-
 	for (int i = 0; i < edge_width*12; i++) {
 		if (cube.edges[i] != edges[i]) {
 			return false;	
@@ -94,41 +66,6 @@ std::unique_ptr<unsigned char[]> Cube::copy_pieces(const unsigned char* array, c
 	}
 
 	return result;
-}
-
-void Cube::transpose_center(const Face face) {
-	//the index of the first piece of the center of the given piece
-	int center_start = face_numbers[face]*center_size;
-
-	//an in-place square matrix transposition is performed on the center pieces of the given face
-	for (int i = 0; i < edge_width-1; i++) {
-		for (int j = i+1; j < edge_width; j++) {
-			std::swap(centers[center_start + i*edge_width + j], centers[center_start + j*edge_width + i]);
-		}	
-	}
-}
-
-void Cube::reverse_center_rows(const Face face) {
-	//the index of the first piece of the center of the given piece
-	int center_start = face_numbers[face]*center_size;
-
-	//the rows of the center of the given face are each reversed
-	for (int i = 0; i < edge_width; i++) {
-		for (int j = 0; j < edge_width/2; j++) {
-			int row_start = center_start + i*edge_width;
-			std::swap(centers[row_start+j], centers[row_start+edge_width-j-1]);	
-		}
-	}
-}
-
-void Cube::shift_pieces(unsigned char* pieces, int* indecies, int degrees, int offset) {
-	int shifts = degrees == 90 ? 1 : 3;
-	
-	int temp = pieces[indecies[0]+offset];
-	for (int i = 4-shifts; i != 0; i = (i-shifts+4)%4) {
-		pieces[indecies[(i+shifts)%4]+offset] = pieces[indecies[i]+offset];	
-	}
-	pieces[indecies[shifts]+offset] = temp;
 }
 
 void Cube::rotate_face(const Face face, const int degrees) {
@@ -165,16 +102,6 @@ void Cube::rotate_face(const Face face, const int degrees) {
 		{10,6,2,7}, //FRONT
 		{9,5,1,6},  //RIGHT
 	};
-
-	//rotate the center of the specified face
-	if (degrees == 90) {
-		reverse_center_rows(face);
-		transpose_center(face);
-	}
-	else {
-		transpose_center(face);
-		reverse_center_rows(face);
-	}
 
 	int rotations = degrees == 90 ? 1 : 3;	
 	
@@ -235,23 +162,6 @@ void Cube::rotate_slice(const Face face, const int layer, const int degrees) {
 		{10,8,0,2}, //RIGHT
 	};
 
-	///array specifies the indicies of the centers that exist in each slice
-	//
-	//the indecies of the center pieces in the slice are numbered as follows:
-	//   | 0 | 
-	//----------
-	// 3 |   | 1
-	//----------
-	//   | 2 | 
-	int slice_centers[6][4] = {
-		{1,4,3,2}, //LEFT  
-		{2,5,4,0}, //TOP
-		{1,0,3,5}, //BACK
-		{4,5,2,0}, //BOTTOM
-		{1,5,3,0}, //FRONT
-		{1,2,3,4}, //RIGHT
-	};
-
 	//the number of 90 degree rotations to perform on the cube
 	int rotations = degrees == 90 ? 1 : 3;
 
@@ -276,19 +186,6 @@ void Cube::rotate_slice(const Face face, const int layer, const int degrees) {
 	//the edges are rotated
 	shift_pieces(edges.get(), edge_shifts, degrees, inner_layer);
 
-	//move the center pieces in the slice being rotated
-	auto& center_shifts = slice_centers[face_numbers[face]];
-	for (int i = 0; i < edge_width; i++) {
-		int center_index;
-		if (face == Face::TOP || face == Face::BOTTOM) {
-			center_index = i + inner_layer;	
-		}
-		else {
-			center_index = (i*edge_width)+inner_layer;	
-		}
-
-		shift_pieces(centers.get(), center_shifts, degrees, center_index);
-	}
 }
 
 void Cube::rotate(const Twist& twist) {
@@ -316,7 +213,6 @@ void Cube::rotate(const Twist& twist) {
 
 size_t std::hash<Cube>::operator()(const cube::Cube& cube) const {
 	size_t seed = 0;
-	boost::hash_range(seed, cube.centers.get(), cube.centers.get()+(cube.center_size*6));
 	boost::hash_range(seed, cube.edges.get(), cube.edges.get()+(cube.edge_width*12));
 	boost::hash_range(seed, cube.corners.get(), cube.corners.get()+8);
 

@@ -3,31 +3,17 @@
 
 #include <unordered_map>
 #include <memory>
+
 #include "face.h"
+#include "cube_base.h"
 
 namespace cube {
 	class Twist;
 
-	//Optimized symbolic representation of the cube adapted from http://www.cube20.org/src/cubepos.pdf
-	class Cube {
+	//Optimized symbolic representation of the cube,
+	//exculding the centers, adapted from http://www.cube20.org/src/cubepos.pdf
+	class Cube : public CubeBase {
 		private:
-			//numbers the faces of the cube
-			static std::unordered_map<Face, int> face_numbers;
-
-			//the size of the cube
-			unsigned char size;
-
-			//width of an edge
-			unsigned char edge_width;
-
-			//number of pieces in a center
-			unsigned char center_size;
-
-			//the stored representation of the pieces
-			//
-			//all 8 bits specify position
-			std::unique_ptr<unsigned char[]> centers;
-
 			//first 7 bits specify position, last bit specifies orientation
 			//orientation bit is flipped on every rotation
 			std::unique_ptr<unsigned char[]> edges;
@@ -55,18 +41,6 @@ namespace cube {
 				corners[corner] |= orientation << 3;	
 			}
 
-			//transposes the matrix that is made of the centers of a face
-			void transpose_center(const Face face);
-
-			//reverses the rows in the matrix that is made of the centers of the face
-			void reverse_center_rows(const Face face);
-
-			//circular-shifts the pieces in the given array located at the given indecies.
-			//A 90 degree rotation causes 1 circular shift, and a -90 degree rotation 3 circular
-			//shifts. The offset value is added to each of the indecies, making it easier to 
-			//rotate the nth edge or the nth center, where n != 1
-			void shift_pieces(unsigned char* pieces, int* indecies, int degrees, int offset);
-
 			//performs a 90 degree rotation on the outermost layer of the given face
 			void rotate_face(const Face face, const int degrees);
 
@@ -85,8 +59,6 @@ namespace cube {
 			Cube& operator=(const Cube& cube);
 
 			//getters for the state of the cube
-			int get_size() const {return size;}
-			int get_center_pos(const int center) const {return centers[center];}
 			int get_edge_pos(const int edge) const {return edges[edge] & 0x7F;}
 			int get_corner_pos(const int corner) const {return corners[corner] & 7;}
 			int get_edge_orientation(const int edge) const {return edges[edge] >> 7;}
