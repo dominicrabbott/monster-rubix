@@ -16,7 +16,7 @@ namespace cube {
 		private:
 			//first 7 bits specify position, last bit specifies orientation
 			//orientation bit is flipped on every rotation
-			std::unique_ptr<unsigned char[]> edges;
+			std::unique_ptr<uint8_t[]> edges;
 
 			//first 3 bits specify position, list 2 bits specify orientation
 			//
@@ -24,7 +24,7 @@ namespace cube {
 			//	0 - correct orientation
 			//	1 - clockwise twist
 			//	2 - counter-clockwise twist
-			std::unique_ptr<unsigned char[]> corners;
+			std::unique_ptr<uint8_t[]> corners;
 
 			//helper functions for manipulating the pieces
 			
@@ -52,7 +52,7 @@ namespace cube {
 			void rotate_slice(const Face face, const int layer, const int degrees);
 
 			//copies an array of pieces and returns a unique_ptr to the data
-			std::unique_ptr<unsigned char[]> copy_pieces(const unsigned char* array, const int size); 
+			std::unique_ptr<uint8_t[]> copy_pieces(const uint8_t* array, const int size); 
 
 		public:
 			//constructs a solved cube of the given size

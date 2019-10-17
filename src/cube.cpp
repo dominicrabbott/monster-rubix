@@ -11,8 +11,8 @@ using namespace cube;
 
 Cube::Cube(const int size) : 
 	CubeBase(size),
-	edges(std::make_unique<unsigned char[]>(edge_width*12)),
-	corners(std::make_unique<unsigned char[]>(8)) {
+	edges(std::make_unique<uint8_t[]>(edge_width*12)),
+	corners(std::make_unique<uint8_t[]>(8)) {
 
 	assert(size <= 8 && "Cube class can only represent 8x8x8 cubes or smaller");
 
@@ -58,8 +58,8 @@ bool Cube::operator==(const Cube& cube) const {
 	return true;
 }
 
-std::unique_ptr<unsigned char[]> Cube::copy_pieces(const unsigned char* array, const int size) {
-	std::unique_ptr<unsigned char[]> result = std::make_unique<unsigned char[]>(size);
+std::unique_ptr<uint8_t[]> Cube::copy_pieces(const uint8_t* array, const int size) {
+	std::unique_ptr<uint8_t[]> result = std::make_unique<uint8_t[]>(size);
 
 	for (int i = 0; i < size; i++) {
 		result[i] = array[i];	
