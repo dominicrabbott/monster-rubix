@@ -103,20 +103,27 @@ void Cube::rotate_face(const Face face, const int degrees) {
 		{9,5,1,6},  //RIGHT
 	};
 
+	//the corners that lie in the left face
+	static std::unordered_set<int> left_corners = {0,3,4,7};
+
+	//the corners that lie in the right face
+	static std::unordered_set<int> right_corners = {1,2,5,6};
+
 	int rotations = degrees == 90 ? 1 : 3;	
 	
 	auto& corner_shifts = face_corners[face_numbers[face]];
 	//manipulate the corners of the face to be rotated
-	if ((face != cube::Face::TOP) && (face != cube::Face::BOTTOM)) {
+	if ((face != cube::Face::RIGHT) && (face != cube::Face::LEFT)) {
 		for (int i = 0; i < 4; i++) {
 			//Rotate the corners
 			//
-			//In a 90 degree rotation, if a corner is moved from the U face to the D face
-			//or from the D face to the U face, the corner is rotated clockwise. Otherwise, 
-			//the corner is rotated counter-clockwise
+			//In a 90 degree rotation of a face other than the right or left faces, if a 
+			//corner is moved from the R face to the L face or from the L face to the R 
+			//face, the corner is rotated clockwise. Otherwise, the corner is rotated 
+			//counter-clockwise
 			int rotation;
-			if ((corner_shifts[(i+rotations)%4] < 4 && corner_shifts[i] < 4) || 
-					(corner_shifts[(i+rotations)%4] >= 4 && corner_shifts[i] >= 4)) {
+			if ((right_corners.count(corner_shifts[(i+rotations)%4]) && right_corners.count(corner_shifts[i])) || 
+					(left_corners.count(corner_shifts[(i+rotations)%4]) && left_corners.count(corner_shifts[i]))) {
 				rotation = degrees == 90 ? 1 : 2;
 			}
 			else {
