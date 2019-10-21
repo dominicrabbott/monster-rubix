@@ -2,7 +2,6 @@
 #include <iostream>
 #include <unordered_set>
 #include <cassert>
-#include <boost/functional/hash.hpp>
 
 #include "cube_centers.h"
 #include "twist.h"
@@ -160,11 +159,4 @@ void CubeCenters::rotate(const Twist& twist) {
 			rotate_slice(twist.face, twist.layer, twist.degrees);	
 		}	
 	}	
-}
-
-size_t std::hash<CubeCenters>::operator()(const cube::CubeCenters& cube) const {
-	size_t seed = 0;
-	boost::hash_range(seed, cube.centers.get(), cube.centers.get()+(cube.center_size*6));
-
-	return seed;
 }

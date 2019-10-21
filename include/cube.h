@@ -73,15 +73,6 @@ namespace cube {
 
 			bool operator==(const Cube& cube) const;
 			Cube(Cube&& cube) = default;
-
-			friend std::hash<Cube>;
-	};
-}
-
-namespace std {
-	template<>
-	struct hash<cube::Cube> {
-		size_t operator()(const cube::Cube& cube) const;
 	};
 }
 
