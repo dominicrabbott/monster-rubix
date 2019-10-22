@@ -18,14 +18,46 @@ namespace cube {
 	class Cube;
 }
 
+namespace std {
+	template<>
+	struct hash<std::vector<uint8_t>> {
+		size_t operator()(const std::vector<uint8_t> vec) const {
+			size_t seed = 0;
+			boost::hash_range(seed, vec.begin(), vec.end());
+
+			return seed;
+		}	
+	};
+
+	inline bool operator==(const std::vector<uint8_t> vec1, const std::vector<uint8_t> vec2) {
+		return std::equal(vec1.begin(), vec1.end(), vec2.begin());	
+	}
+
+}
+
 namespace ai {
 	class ThreeCubeSolver {
 		private:
 			typedef std::unordered_map<std::vector<uint8_t>, std::vector<cube::Twist>> LookupTable;
 			typedef std::function<std::vector<uint8_t>(const cube::Cube&)> Encoder;
 
+			//lookup tables for each of the stages
+			LookupTable tables[4];
+
+			//Encoder callables for each of the stages
+			Encoder encoders[4] = {
+				std::bind(&ThreeCubeSolver::encode_g1, this, std::placeholders::_1),
+				std::bind(&ThreeCubeSolver::encode_g2, this, std::placeholders::_1),
+				std::bind(&ThreeCubeSolver::encode_g3, this, std::placeholders::_1),
+				std::bind(&ThreeCubeSolver::encode_g4, this, std::placeholders::_1),
+			};
+
 			//maps the edges to the slices they belong in
-			std::unordered_map<int, int> edge_slices;
+			std::unordered_map<int, int> edge_slices {
+				{4,0}, {5,0}, {6,0}, {7,0},
+				{0,1}, {2,1}, {8,1}, {10,1},
+				{3,2}, {1,2}, {11,2}, {9,2},
+			};
 
 			//directory the lookup tables are stored to
 			std::string table_dir = "tables/";
@@ -65,12 +97,9 @@ namespace ai {
 
 
 		public:
-			ThreeCubeSolver() : edge_slices({
-				{4,0}, {5,0}, {6,0}, {7,0},
-				{0,1}, {2,1}, {8,1}, {10,1},
-				{3,2}, {1,2}, {11,2}, {9,2},
-				}) {}
-			
+			//constructor loads the lookup tables
+			ThreeCubeSolver();
+
 			//solves the given cube object and returns a vector that contains the twists that were made
 			//to solve the cube
 			std::vector<cube::Twist> solve(cube::Cube& cube);

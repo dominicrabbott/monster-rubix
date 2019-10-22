@@ -11,24 +11,39 @@
 #include "cube.h"
 #include "face.h"
 
-namespace std {
-	template<>
-	struct hash<std::vector<uint8_t>> {
-		size_t operator()(const std::vector<uint8_t> vec) const {
-			size_t seed = 0;
-			boost::hash_range(seed, vec.begin(), vec.end());
+using namespace ai;
+ThreeCubeSolver::ThreeCubeSolver() {
 
-			return seed;
-		}	
+
+	std::string filenames[] = {
+		"g1_table.bin",
+		"g2_table.bin",
+		"g3_table.bin",
+		"g4_table.bin",
 	};
 
-	bool operator==(const std::vector<uint8_t> vec1, const std::vector<uint8_t> vec2) {
-		return std::equal(vec1.begin(), vec1.end(), vec2.begin());	
+	using namespace cube;
+	std::unordered_set<cube::Face> restricted_faces[] {
+		{},
+		{Face::TOP, Face::BOTTOM},	
+		{Face::TOP, Face::BOTTOM, Face::FRONT, Face::BACK},
+		{Face::TOP, Face::BOTTOM, Face::FRONT, Face::BACK, Face::LEFT, Face::RIGHT},
+	};
+
+	for (int stage = 0; stage < 4; stage++) {
+		std::string file_path = table_dir+filenames[stage];
+		if (!load_lookup_table(tables[stage], file_path)) {
+			tables[stage] = create_lookup_table(encoders[stage], generate_twist_sequences(restricted_faces[stage]));
+			save_lookup_table(tables[stage], file_path);
+			std::cout << "Table for stage " << stage << " generated\n";
+		}
+		else {
+			std::cout << "Loading table for stage " << stage << " complete\n";
+		}
 	}
 
-}
 
-using namespace ai;
+}
 
 bool ThreeCubeSolver::even_parity(const cube::Cube& cube) {
 	int corner_pos[8];
@@ -257,38 +272,8 @@ std::unordered_map<std::vector<uint8_t>, std::vector<cube::Twist>> ThreeCubeSolv
 std::vector<cube::Twist> ThreeCubeSolver::solve(cube::Cube& cube) {
 	std::vector<cube::Twist> moves;
 
-	using namespace std::placeholders;
-	Encoder encoders[] = {
-		std::bind(&ThreeCubeSolver::encode_g1, this, _1),
-		std::bind(&ThreeCubeSolver::encode_g2, this, _1),
-		std::bind(&ThreeCubeSolver::encode_g3, this, _1),
-		std::bind(&ThreeCubeSolver::encode_g4, this, _1),
-	};
-
-	std::string filenames[] = {
-		"g1_table.bin",
-		"g2_table.bin",
-		"g3_table.bin",
-		"g4_table.bin",
-	};
-
-	using namespace cube;
-	std::unordered_set<cube::Face> restricted_faces[] {
-		{},
-		{Face::TOP, Face::BOTTOM},	
-		{Face::TOP, Face::BOTTOM, Face::FRONT, Face::BACK},
-		{Face::TOP, Face::BOTTOM, Face::FRONT, Face::BACK, Face::LEFT, Face::RIGHT},
-	};
-
 	for (int stage = 0; stage < 4; stage++) {
-		std::string file_path = table_dir+filenames[stage];
-		LookupTable table;
-		if (!load_lookup_table(table, file_path)) {
-			table = create_lookup_table(encoders[stage], generate_twist_sequences(restricted_faces[stage]));
-			save_lookup_table(table, file_path);
-		}
-		
-		for (const auto& twist : table[encoders[stage](cube)]) {
+		for (const auto& twist : tables[stage][encoders[stage](cube)]) {
 			moves.push_back(twist);
 			cube.rotate(twist);	
 		}
