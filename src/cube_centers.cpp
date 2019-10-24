@@ -1,7 +1,6 @@
 #include <cmath>
 #include <iostream>
 #include <unordered_set>
-#include <cassert>
 
 #include "cube_centers.h"
 #include "twist.h"
@@ -13,10 +12,8 @@ CubeCenters::CubeCenters(const int size) :
 	center_size(std::pow(size-2,2)),
 	centers(std::make_unique<unsigned char[]>(center_size*6)) {
 
-	assert(size <= 8 && "Cube class can only represent 8x8x8 cubes or smaller");
-
 	for (int i = 0; i < center_size*6; i++) {
-		centers[i] = i;
+		centers[i] = i/center_size;
 	}
 }
 

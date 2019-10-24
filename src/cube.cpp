@@ -1,7 +1,6 @@
 #include <cmath>
 #include <iostream>
 #include <unordered_set>
-#include <cassert>
 
 #include "cube.h"
 #include "twist.h"
@@ -13,10 +12,8 @@ Cube::Cube(const int size) :
 	edges(std::make_unique<uint8_t[]>(edge_width*12)),
 	corners(std::make_unique<uint8_t[]>(8)) {
 
-	assert(size <= 8 && "Cube class can only represent 8x8x8 cubes or smaller");
-
 	for (int i = 0; i < edge_width*12; i++) {
-		edges[i] = i;
+		edges[i] = i/edge_width;
 	}
 	for (int i = 0; i < 8; i++) {
 		corners[i] = i;
