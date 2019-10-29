@@ -4,7 +4,7 @@
 class ostream;
 
 namespace cube {
-	enum class Face {RIGHT, LEFT, TOP, BOTTOM, FRONT, BACK};
+	enum class Face : int {LEFT = 0, TOP = 1, BACK = 2, BOTTOM = 3, FRONT = 4, RIGHT = 5};
 
 	const Face ALL_FACES[] = {
 		Face::RIGHT,	

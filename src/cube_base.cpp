@@ -9,16 +9,6 @@
 
 using namespace cube;
 
-std::unordered_map<Face, int> CubeBase::face_numbers = {
-	{Face::LEFT, 0},
-	{Face::TOP, 1},
-	{Face::BACK, 2},
-	{Face::BOTTOM, 3},
-	{Face::FRONT, 4},
-	{Face::RIGHT, 5},
-
-};
-
 CubeBase::CubeBase(const int size) : 
 	size(size),
 	edge_width(size-2) {

@@ -54,7 +54,7 @@ std::unique_ptr<unsigned char[]> CubeCenters::copy_pieces(const unsigned char* a
 
 void CubeCenters::transpose_center(const Face face) {
 	//the index of the first piece of the center of the given piece
-	int center_start = face_numbers[face]*center_size;
+	int center_start = static_cast<int>(face)*center_size;
 
 	//an in-place square matrix transposition is performed on the center pieces of the given face
 	for (int i = 0; i < edge_width-1; i++) {
@@ -66,7 +66,7 @@ void CubeCenters::transpose_center(const Face face) {
 
 void CubeCenters::reverse_center_rows(const Face face) {
 	//the index of the first piece of the center of the given piece
-	int center_start = face_numbers[face]*center_size;
+	int center_start = static_cast<int>(face)*center_size;
 
 	//the rows of the center of the given face are each reversed
 	for (int i = 0; i < edge_width; i++) {
@@ -121,7 +121,7 @@ void CubeCenters::rotate_slice(const Face face, const int layer, const int degre
 	}
 	
 	//move the center pieces in the slice being rotated
-	auto& center_shifts = slice_centers[face_numbers[face]];
+	auto& center_shifts = slice_centers[static_cast<int>(face)];
 	for (int i = 0; i < edge_width; i++) {
 		int center_index;
 		if (face == Face::TOP || face == Face::BOTTOM) {

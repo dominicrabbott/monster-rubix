@@ -11,9 +11,6 @@ namespace cube {
 	//Optimized symbolic representation of the centers of the cube
 	class CubeBase {
 		protected:
-			//numbers the faces of the cube
-			static std::unordered_map<Face, int> face_numbers;
-
 			//the size of the cube
 			unsigned char size;
 
