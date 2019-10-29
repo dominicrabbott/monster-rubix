@@ -23,6 +23,9 @@ namespace cube {
 			//rotate the nth edge or the nth center, where n != 1
 			void shift_pieces(unsigned char* pieces, int* indecies, int degrees, int offset);
 
+			//maps faces to thier opposing face
+			static std::unordered_map<Face, Face> opposing_faces;
+
 		public:
 			//constructs a solved cube of the given size
 			CubeBase(const int size);

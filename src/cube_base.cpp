@@ -9,11 +9,18 @@
 
 using namespace cube;
 
+std::unordered_map<Face, Face> CubeBase::opposing_faces = {
+	{Face::FRONT, Face::BACK},
+	{Face::BACK, Face::FRONT},
+	{Face::RIGHT, Face::LEFT},
+	{Face::LEFT, Face::RIGHT},
+	{Face::TOP, Face::BOTTOM},
+	{Face::BOTTOM, Face::TOP},
+};
+
 CubeBase::CubeBase(const int size) : 
 	size(size),
-	edge_width(size-2) {
-		assert(size <= 8 && "Cube class can only represent 8x8x8 cubes or smaller");
-	}
+	edge_width(size-2) {}
 
 CubeBase::CubeBase(const CubeBase& cube) : 
 	size(cube.size),
