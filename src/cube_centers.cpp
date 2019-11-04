@@ -145,7 +145,7 @@ void CubeCenters::rotate(const Twist& twist) {
 			rotate_face(twist.face, twist.degrees);	
 		}
 		else if (i == size - 1) {
-			rotate(Twist(-twist.degrees, opposing_faces[twist.face]));
+			rotate(Twist(-twist.degrees, OPPOSING_FACES.at(twist.face)));
 		}
 		else {
 			rotate_slice(twist.face, twist.layer, twist.degrees);	

@@ -201,21 +201,12 @@ void Cube::rotate_slice(const Face face, const int layer, const int degrees) {
 }
 
 void Cube::rotate(const Twist& twist) {
-	static std::unordered_map<Face, Face> opposing_faces = {
-		{Face::FRONT, Face::BACK},
-		{Face::BACK, Face::FRONT},
-		{Face::RIGHT, Face::LEFT},
-		{Face::LEFT, Face::RIGHT},
-		{Face::TOP, Face::BOTTOM},
-		{Face::BOTTOM, Face::TOP},
-	};
-
 	for (int i = twist.layer; i >= (twist.wide_turn ? 0 : twist.layer); i--) {
 		if (i == 0) {
 			rotate_face(twist.face, twist.degrees);	
 		}
 		else if (i == size - 1) {
-			rotate(Twist(-twist.degrees, opposing_faces[twist.face]));
+			rotate(Twist(-twist.degrees, OPPOSING_FACES.at(twist.face)));
 		}
 		else {
 			rotate_slice(twist.face, twist.layer, twist.degrees);	

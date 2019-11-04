@@ -23,9 +23,6 @@ namespace cube {
 			//shifts. The offset value is added to each of the indecies, making it easier to 
 			//rotate the nth edge or the nth center, where n != 1
 			void shift_pieces(uint8_t* pieces, const std::array<int, 4> indecies, const int degrees);
-
-			//maps faces to thier opposing face
-			static std::unordered_map<Face, Face> opposing_faces;
 		
 		public:
 			//constructs a solved cube of the given size
