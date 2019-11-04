@@ -65,7 +65,7 @@ std::unique_ptr<uint8_t[]> Cube::copy_pieces(const uint8_t* array, const int siz
 }
 
 void Cube::rotate_face(const Face face, const int degrees) {
-	//array specifies the indicies of the corner pieces that exist in each face.
+	//map specifies the indicies of the corner pieces that exist in each face.
 	//
 	//the corners of a face are numbered as follows:
 	// 0 |  | 1
@@ -73,13 +73,13 @@ void Cube::rotate_face(const Face face, const int degrees) {
 	//   |  | 
 	//---------
 	// 3 |  | 2
-	int face_corners[6][4] = {
-		{4,7,3,0}, //LEFT
-		{4,5,6,7}, //TOP
-		{5,4,0,1}, //BACK
-		{3,2,1,0}, //BOTTOM
-		{7,6,2,3}, //FRONT
-		{6,5,1,2}, //RIGHT
+	static std::unordered_map<Face, std::array<int, 4>> face_corners = {
+		{Face::LEFT, {4,7,3,0}},
+		{Face::TOP, {4,5,6,7}},
+		{Face::BACK, {5,4,0,1}},
+		{Face::BOTTOM, {3,2,1,0}},
+		{Face::FRONT, {7,6,2,3}},
+		{Face::RIGHT, {6,5,1,2}},
 	};
 
 	//array specifies the indicies of the edge pieces that exist in each face
@@ -90,13 +90,13 @@ void Cube::rotate_face(const Face face, const int degrees) {
 	// 3 |   | 1
 	//----------
 	//   | 2 | 
-	int face_edges[6][4] = {
-		{11,7,3,4}, //LEFT
-		{8,9,10,11},//TOP
-		{8,4,0,5},  //BACK
-		{2,1,0,3},  //BOTTOM
-		{10,6,2,7}, //FRONT
-		{9,5,1,6},  //RIGHT
+	static std::unordered_map<Face, std::array<int, 4>> face_edges = {
+		{Face::LEFT, {11,7,3,4}},
+		{Face::TOP, {8,9,10,11}},
+		{Face::BACK, {8,4,0,5}},
+		{Face::BOTTOM, {2,1,0,3}},
+		{Face::FRONT, {10,6,2,7}},
+		{Face::RIGHT, {9,5,1,6}},
 	};
 
 	//the corners that lie in the left face
@@ -107,7 +107,7 @@ void Cube::rotate_face(const Face face, const int degrees) {
 
 	int rotations = degrees == 90 ? 1 : 3;	
 	
-	auto& corner_shifts = face_corners[static_cast<int>(face)];
+	auto& corner_shifts = face_corners[face];
 	//manipulate the corners of the face to be rotated
 	if ((face != cube::Face::RIGHT) && (face != cube::Face::LEFT)) {
 		for (int i = 0; i < 4; i++) {
@@ -131,19 +131,24 @@ void Cube::rotate_face(const Face face, const int degrees) {
 
 	//the corners are shifted among the 
 	//corner positions of the face as specified in the face_corners array
-	shift_pieces(corners.get(), corner_shifts, degrees, 0);
+	shift_pieces(corners.get(), corner_shifts, degrees);
 	
 	//manipulate the edges of the face to be rotated
-	auto& edge_shifts = face_edges[static_cast<int>(face)];
+	auto& edge_shifts = face_edges[face];
 	for (int i = 0; i < edge_width; i++) {
+		auto& current_shifts = edge_shifts;
+		for (int j = 0; j < 4; j++) {
+			current_shifts[j] = edge_shifts[j] + i;
+		}	
+		
+		//The edges are shifted among the edge positions of the 
+		//face as specified in the face_edges array
+		shift_pieces(edges.get(), current_shifts, degrees);
+		
 		//the orientation of each edge involved in the rotation is flipped
 		for (int j = 0; j < 4; j++) {
 			flip_edge(edge_shifts[j]*edge_width + i, face);	
 		}
-		
-		//The edges are shifted among the edge positions of the 
-		//face as specified in the face_edges array
-		shift_pieces(edges.get(), edge_shifts, degrees, i);
 	}
 }
 
@@ -156,13 +161,13 @@ void Cube::rotate_slice(const Face face, const int layer, const int degrees) {
 	//   |  | 
 	//---------
 	// 3 |  | 2
-	int slice_edges[6][4] = {
-		{8,10,2,0}, //LEFT  
-		{4,5,6,7},  //TOP
-		{9,11,3,1}, //BACK
-		{7,6,5,4},  //BOTTOM
-		{11,9,1,3}, //FRONT
-		{10,8,0,2}, //RIGHT
+	static std::unordered_map<Face, std::array<int, 4>> slice_edges = {
+		{Face::LEFT, {8,10,2,0}},
+		{Face::TOP, {4,5,6,7}},
+		{Face::BACK, {9,11,3,1}},
+		{Face::BOTTOM, {7,6,5,4}},
+		{Face::FRONT, {11,9,1,3}},
+		{Face::RIGHT, {10,8,0,2}},
 	};
 
 	//the number of 90 degree rotations to perform on the cube
@@ -180,14 +185,18 @@ void Cube::rotate_slice(const Face face, const int layer, const int degrees) {
 	
 	//manipulate the edges in the slice being rotated
 	
-	auto& edge_shifts = slice_edges[static_cast<int>(face)];
+	auto edge_shifts = slice_edges[face];
 	//if the face being rotated is the top or bottom face, the edges are flipped
 	for (int i = 0; i < 4; i++) {
 		flip_edge(edge_shifts[i]+inner_layer, face);
 	}
+	
+	//the edges are moved 
+	for (int i = 0; i < 4; i++) {
+		edge_shifts[i] += inner_layer;	
+	}
 
-	//the edges are rotated
-	shift_pieces(edges.get(), edge_shifts, degrees, inner_layer);
+	shift_pieces(edges.get(), edge_shifts, degrees);
 
 }
 

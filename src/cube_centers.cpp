@@ -10,7 +10,7 @@ using namespace cube;
 CubeCenters::CubeCenters(const int size) : 
 	CubeBase(size),
 	center_size(std::pow(size-2,2)),
-	centers(std::make_unique<unsigned char[]>(center_size*6)) {
+	centers(std::make_unique<uint8_t[]>(center_size*6)) {
 
 	for (int i = 0; i < center_size*6; i++) {
 		centers[i] = i/center_size;
@@ -42,8 +42,8 @@ bool CubeCenters::operator==(const CubeCenters& cube) const {
 	return true;
 }
 
-std::unique_ptr<unsigned char[]> CubeCenters::copy_pieces(const unsigned char* array, const int size) {
-	std::unique_ptr<unsigned char[]> result = std::make_unique<unsigned char[]>(size);
+std::unique_ptr<uint8_t[]> CubeCenters::copy_pieces(const uint8_t* array, const int size) {
+	std::unique_ptr<uint8_t[]> result = std::make_unique<uint8_t[]>(size);
 
 	for (int i = 0; i < size; i++) {
 		result[i] = array[i];	
@@ -90,61 +90,56 @@ void CubeCenters::rotate_face(const Face face, const int degrees) {
 }
 
 void CubeCenters::rotate_slice(const Face face, const int layer, const int degrees) {
-	///array specifies the indicies of the centers that exist in each slice
+	///map specifies the the centers that exist in each slice
 	//
-	//the indecies of the center pieces in the slice are numbered as follows:
+	//the indecies of the center pieces in the slice are listed as follows:
 	//   | 0 | 
 	//----------
 	// 3 |   | 1
 	//----------
 	//   | 2 | 
-	int slice_centers[6][4] = {
-		{1,4,3,2}, //LEFT  
-		{2,5,4,0}, //TOP
-		{1,0,3,5}, //BACK
-		{4,5,2,0}, //BOTTOM
-		{1,5,3,0}, //FRONT
-		{1,2,3,4}, //RIGHT
+	static std::unordered_map<Face, std::array<Face,4>> slice_centers = {
+		{Face::LEFT, {Face::TOP, Face::FRONT, Face::BOTTOM, Face::BACK}},
+		{Face::TOP, {Face::BACK, Face::RIGHT, Face::FRONT, Face::LEFT}},
+		{Face::BACK, {Face::TOP, Face::LEFT, Face::BOTTOM, Face::RIGHT}},
+		{Face::BOTTOM, {Face::FRONT, Face::RIGHT, Face::BACK, Face::LEFT}},
+		{Face::FRONT, {Face::TOP, Face::RIGHT, Face::BOTTOM, Face::LEFT}},
+		{Face::RIGHT, {Face::TOP, Face::BACK, Face::BOTTOM, Face::FRONT}},
 	};
 
-	//the number of 90 degree rotations to perform on the cube
-	int rotations = degrees == 90 ? 1 : 3;
+	//A slice rotation either slices a face horizontally or vertically. This map associates
+	//faces with the slice rotation that slices that face vertically
+	static std::unordered_map<Face, Face> vertical_slices = {
+		{Face::FRONT, Face::LEFT},
+		{Face::BACK, Face::LEFT},
+		{Face::RIGHT, Face::BACK},
+		{Face::LEFT, Face::BACK},
+		{Face::TOP, Face::BACK},
+		{Face::BOTTOM, Face::BACK},
+	};
 
-	//determine the inner layer of the cube to be rotated. The inner layers are numbered starting
-	//from the Front, Left, and bottom faces and going to the opposite face
-	int inner_layer;
-	if (face == Face::FRONT || face == Face::LEFT || face == Face::BOTTOM) {
-		inner_layer = layer-1;	
-	}
-	else {
-		inner_layer = size-layer-2;	
-	}
-	
-	//move the center pieces in the slice being rotated
-	auto& center_shifts = slice_centers[static_cast<int>(face)];
-	for (int i = 0; i < edge_width; i++) {
-		int center_index;
-		if (face == Face::TOP || face == Face::BOTTOM) {
-			center_index = i + inner_layer;	
-		}
-		else {
-			center_index = (i*edge_width)+inner_layer;	
-		}
+	auto& center_shifts = slice_centers[face];
+	for (int cycle = 0; cycle < edge_width; cycle++) {
+		std::array<int, 4> piece_shifts;
+		for (int i = 0; i < 4; i++) {
+			int x_face_coord;
+			int y_face_coord;
+			if (vertical_slices[center_shifts[i]] == vertical_slices[center_shifts[(i+1)%4]]) {
+				x_face_coord = layer-1;
+				y_face_coord = cycle;
+			}
+			else {
+				x_face_coord = cycle;
+				y_face_coord = layer-1;
+			}
 
-		shift_pieces(centers.get(), center_shifts, degrees, center_index);
+			piece_shifts[(i+1)%4] = static_cast<int>(center_shifts[(i+1)%4])*center_size + edge_width*y_face_coord + x_face_coord;
+		}
+		shift_pieces(centers.get(), piece_shifts, degrees);	
 	}
 }
 
 void CubeCenters::rotate(const Twist& twist) {
-	static std::unordered_map<Face, Face> opposing_faces = {
-		{Face::FRONT, Face::BACK},
-		{Face::BACK, Face::FRONT},
-		{Face::RIGHT, Face::LEFT},
-		{Face::LEFT, Face::RIGHT},
-		{Face::TOP, Face::BOTTOM},
-		{Face::BOTTOM, Face::TOP},
-	};
-
 	for (int i = twist.layer; i >= (twist.wide_turn ? 0 : twist.layer); i--) {
 		if (i == 0) {
 			rotate_face(twist.face, twist.degrees);	

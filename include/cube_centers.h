@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <memory>
+#include <array>
 
 #include "face.h"
 #include "cube_base.h"
@@ -14,15 +15,16 @@ namespace cube {
 	class CubeCenters : public CubeBase {
 		private:
 			//number of pieces in a center
-			unsigned char center_size;
+			uint8_t center_size;
 
 			//the stored representation of the pieces
 			//
 			//all 8 bits specify position
-			std::unique_ptr<unsigned char[]> centers;
-
-			//helper functions for manipulating the pieces
+			std::unique_ptr<uint8_t[]> centers;
 			
+			//helper functions for manipulating the pieces
+			//
+			//
 			//transposes the matrix that is made of the centers of a face
 			void transpose_center(const Face face);
 
@@ -36,7 +38,7 @@ namespace cube {
 			void rotate_slice(const Face face, const int layer, const int degrees);
 
 			//copies an array of pieces and returns a unique_ptr to the data
-			std::unique_ptr<unsigned char[]> copy_pieces(const unsigned char* array, const int size); 
+			std::unique_ptr<uint8_t[]> copy_pieces(const uint8_t* array, const int size); 
 
 		public:
 			//constructs a solved cube of the given size

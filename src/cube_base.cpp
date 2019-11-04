@@ -26,12 +26,11 @@ CubeBase::CubeBase(const CubeBase& cube) :
 	size(cube.size),
 	edge_width(cube.edge_width) {}
 
-void CubeBase::shift_pieces(unsigned char* pieces, int* indecies, int degrees, int offset) {
+void CubeBase::shift_pieces(uint8_t* pieces, const std::array<int, 4> indecies, const int degrees) {
 	int shifts = degrees == 90 ? 1 : 3;
-	
-	int temp = pieces[indecies[0]+offset];
+	int temp = pieces[indecies[0]];
 	for (int i = 4-shifts; i != 0; i = (i-shifts+4)%4) {
-		pieces[indecies[(i+shifts)%4]+offset] = pieces[indecies[i]+offset];	
+		pieces[indecies[(i+shifts)%4]] = pieces[indecies[i]];	
 	}
-	pieces[indecies[shifts]+offset] = temp;
+	pieces[indecies[shifts]] = temp;
 }
