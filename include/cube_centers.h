@@ -17,6 +17,16 @@ namespace cube {
 			//number of pieces in a center
 			uint8_t center_size;
 
+			//map specifies the fixed coordinates for each face
+			std::unordered_map<Face, std::array<int, 2>> face_coords = {
+				{Face::FRONT, {2,edge_width+1}},	
+				{Face::BACK, {2,0}},	
+				{Face::RIGHT, {0,edge_width+1}},	
+				{Face::LEFT, {0,0}},	
+				{Face::TOP, {1,edge_width+1}},	
+				{Face::BOTTOM, {1,0}},	
+			};
+
 			//the stored representation of the pieces
 			//
 			//all 8 bits specify position
@@ -35,7 +45,7 @@ namespace cube {
 			void rotate_face(const Face face, const int degrees);
 
 			//performs a 90 degree rotation on the specified slice of the cube
-			void rotate_slice(const Face face, const int layer, const int degrees);
+			void rotate_slice(const Face slice_face, const int layer, const int degrees);
 
 			//copies an array of pieces and returns a unique_ptr to the data
 			std::unique_ptr<uint8_t[]> copy_pieces(const uint8_t* array, const int size); 

@@ -5,6 +5,8 @@
 #include "cube_centers.h"
 #include "twist.h"
 
+int main();
+
 using namespace cube;
 
 CubeCenters::CubeCenters(const int size) : 
@@ -78,8 +80,14 @@ void CubeCenters::reverse_center_rows(const Face face) {
 }
 
 void CubeCenters::rotate_face(const Face face, const int degrees) {
+	//account for the mirroring of rotations for opposing faces
+	int adjusted_degrees = degrees;
+	if (face == Face::BACK || face == Face::LEFT || face == Face::TOP) {
+		adjusted_degrees *= -1;	
+	}
+
 	//rotate the center of the specified face
-	if (degrees == 90) {
+	if (adjusted_degrees == 90) {
 		reverse_center_rows(face);
 		transpose_center(face);
 	}
@@ -89,7 +97,7 @@ void CubeCenters::rotate_face(const Face face, const int degrees) {
 	}
 }
 
-void CubeCenters::rotate_slice(const Face face, const int layer, const int degrees) {
+void CubeCenters::rotate_slice(const Face slice_face, const int layer, const int degrees) {
 	///map specifies the the centers that exist in each slice
 	//
 	//the indecies of the center pieces in the slice are listed as follows:
@@ -107,35 +115,71 @@ void CubeCenters::rotate_slice(const Face face, const int layer, const int degre
 		{Face::RIGHT, {Face::TOP, Face::BACK, Face::BOTTOM, Face::FRONT}},
 	};
 
-	//A slice rotation either slices a face horizontally or vertically. This map associates
-	//faces with the slice rotation that slices that face vertically
-	static std::unordered_map<Face, Face> vertical_slices = {
-		{Face::FRONT, Face::LEFT},
-		{Face::BACK, Face::LEFT},
-		{Face::RIGHT, Face::BACK},
-		{Face::LEFT, Face::BACK},
-		{Face::TOP, Face::BACK},
-		{Face::BOTTOM, Face::BACK},
-	};
-
-	auto& center_shifts = slice_centers[face];
-	for (int cycle = 0; cycle < edge_width; cycle++) {
+	auto& center_shifts = slice_centers[slice_face];
+	//the centers are shifted with n 4-cycles, where n = edge_width. To shift the pieces,
+	//the pieces moved in the 4-cycle are found in 3D cartesian space. The coordinates of the
+	//pieces are then converted to an index in the 'centers' array
+	for (int cycle = 1; cycle <= edge_width; cycle++) {
 		std::array<int, 4> piece_shifts;
+		int previous_cycle_coordinate = -1;
 		for (int i = 0; i < 4; i++) {
-			int x_face_coord;
-			int y_face_coord;
-			if (vertical_slices[center_shifts[i]] == vertical_slices[center_shifts[(i+1)%4]]) {
-				x_face_coord = layer-1;
-				y_face_coord = cycle;
-			}
-			else {
-				x_face_coord = cycle;
-				y_face_coord = layer-1;
+			//stores the coordinates of the piece being shifted within the
+			//face it is being shifted to
+			std::array<int, 2> piece_coords;
+			
+			Face current_face = center_shifts[i];
+			
+			int piece_coords_index = 0;
+			for (int coord = 0; coord < 3; coord++) {
+				//one coordinate is fixed by the slice that is being rotated
+				if (face_coords[slice_face][0] == coord) {
+					//account for the fact that layers are counted from opposite sides of the cube on opposing faces
+					int adjusted_layer = face_coords[slice_face][1]==0 ? layer : edge_width-layer+1;
+
+					piece_coords[piece_coords_index] = adjusted_layer;
+					piece_coords_index++;
+				}
+				//the other coordinate is determined by which 4-cycle is currently being performed.
+				//
+				//To find this last coordinate, one needs to observe that when a piece is shifted, it
+				//goes to a coordinate who's manhattan distance is (edge_width+1) from its original position.
+				//In order to find the last coordinate, represented by 'c', the following equation based on manhattan distance is 
+				//solved for 'c'.
+				//
+				// edge_width+1 = |c-previous_face_coord| + |current_face_coord - previous_cycle_coordinate|
+				// 
+				// 'previous_face_coord' is the fixed coordinate of the face the piece is being shifted from
+				// 'current_face_coord' is the fixed coordinate of the face the piece is being shifted to
+				// 'previous_cycle_coordinate' is the coordinate of the piece before it was shifted that was determined by which 4-cycle is being performed
+				else if (face_coords[current_face][0] != coord) {
+					if (previous_cycle_coordinate == -1) {
+						piece_coords[piece_coords_index] = cycle;	
+						previous_cycle_coordinate = cycle;
+					}
+					else {
+						int partial_solution = edge_width+1-std::abs(face_coords[current_face][1]-previous_cycle_coordinate);
+						int previous_face_coord = face_coords[center_shifts[i-1]][1];
+
+						int solution_1 = partial_solution+previous_face_coord;
+						int solution_2 = -partial_solution+previous_face_coord;
+
+						if (solution_1 > 0 && solution_1 <= edge_width) {
+							piece_coords[piece_coords_index] = solution_1;	
+						}
+						else {
+							piece_coords[piece_coords_index] = solution_2;
+						}
+
+						previous_cycle_coordinate = piece_coords[piece_coords_index];
+					}
+					piece_coords_index++;
+				}
 			}
 
-			piece_shifts[(i+1)%4] = static_cast<int>(center_shifts[(i+1)%4])*center_size + edge_width*y_face_coord + x_face_coord;
-		}
-		shift_pieces(centers.get(), piece_shifts, degrees);	
+			//the coordinates determined above are converted to a piece index
+			piece_shifts[i] = std::pow(edge_width,2)*static_cast<int>(current_face) + (piece_coords[1]-1)*edge_width + piece_coords[0]-1;
+		}	
+		shift_pieces(centers.get(), piece_shifts, degrees);
 	}
 }
 
@@ -148,7 +192,7 @@ void CubeCenters::rotate(const Twist& twist) {
 			rotate(Twist(-twist.degrees, OPPOSING_FACES.at(twist.face)));
 		}
 		else {
-			rotate_slice(twist.face, twist.layer, twist.degrees);	
+			rotate_slice(twist.face, i, twist.degrees);	
 		}	
 	}	
 }
