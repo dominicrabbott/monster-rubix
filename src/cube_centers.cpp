@@ -183,6 +183,31 @@ void CubeCenters::rotate_slice(const Face slice_face, const int layer, const int
 	}
 }
 
+int CubeCenters::get_center_pos(const std::array<int, 3> coords) const {
+	int piece = 0;
+
+	int face_coord_index = 0;
+	for (int i = 0; i < 3; i++) {
+		if (coords[i] == 0 || coords[i] == edge_width+1) {
+			if (i == 0) {
+				piece += center_size*(coords[i]==0 ? static_cast<int>(Face::LEFT) : static_cast<int>(Face::RIGHT));
+			}
+			else if (i == 1) {
+				piece += center_size*(coords[i]==0 ? static_cast<int>(Face::BOTTOM) : static_cast<int>(Face::TOP));
+			}
+			else {
+				piece += center_size*(coords[i]==0 ? static_cast<int>(Face::BACK) : static_cast<int>(Face::FRONT));
+			}	
+		}
+		else {
+			piece += coords[i]*(face_coord_index*edge_width);
+			face_coord_index++;
+		}	
+	}
+
+	return piece;
+}
+
 void CubeCenters::rotate(const Twist& twist) {
 	for (int i = twist.layer; i >= (twist.wide_turn ? 0 : twist.layer); i--) {
 		if (i == 0) {

@@ -59,7 +59,7 @@ namespace cube {
 			CubeCenters& operator=(const CubeCenters& cube);
 
 			//getters for the state of the cube
-			int get_center_pos(const int center) const {return centers[center];}
+			int get_center_pos(const std::array<int, 3> coords) const;
 
 			//performs a rotation on the cube
 			void rotate(const Twist& twist);
