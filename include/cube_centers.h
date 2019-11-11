@@ -60,6 +60,8 @@ namespace cube {
 
 			//getters for the state of the cube
 			int get_center_pos(const std::array<int, 3> coords) const;
+			int get_center_pos(const int center) const {return centers[center];}
+			std::array<int, 2> get_face_coords(const Face face) const {return face_coords.at(face);};
 
 			//performs a rotation on the cube
 			void rotate(const Twist& twist);
