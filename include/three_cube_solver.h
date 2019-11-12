@@ -7,32 +7,15 @@
 #include <boost/serialization/unordered_map.hpp>
 #include <unordered_set>
 #include <functional>
-#include <boost/functional/hash.hpp>
 #include <memory>
 
 #include "twist.h"
 #include "twist_sequence.h"
 #include "cube_state.h"
+#include "encoding_hasher.h"
 
 namespace cube {
 	class Cube;
-}
-
-namespace std {
-	template<>
-	struct hash<std::vector<uint8_t>> {
-		size_t operator()(const std::vector<uint8_t> vec) const {
-			size_t seed = 0;
-			boost::hash_range(seed, vec.begin(), vec.end());
-
-			return seed;
-		}	
-	};
-
-	inline bool operator==(const std::vector<uint8_t> vec1, const std::vector<uint8_t> vec2) {
-		return std::equal(vec1.begin(), vec1.end(), vec2.begin());	
-	}
-
 }
 
 namespace ai {
