@@ -1,12 +1,12 @@
 #include <thread>
 
-#include "ai_ui_manager.h"
+#include "show_ui_manager.h"
 
 int main() {
-	ui::AIUIManager man(3);
+	ui::ShowUIManager man;
 	man.initApp();
-	std::thread solve_thread(&ui::AIUIManager::solve, &man);
+	std::thread load_thread(&ui::ShowUIManager::solve, &man);
 	man.getRoot() -> startRendering();
 	man.closeApp();
-	solve_thread.join();
+	load_thread.join();
 }
