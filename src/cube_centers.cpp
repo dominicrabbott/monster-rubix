@@ -183,7 +183,7 @@ void CubeCenters::rotate_slice(const Face slice_face, const int layer, const int
 	}
 }
 
-int CubeCenters::get_center_pos(const std::array<int, 3> coords) const {
+int CubeCenters::get_center_pos(const Coords coords) const {
 	int piece = 0;
 
 	int face_coord_index = 0;
