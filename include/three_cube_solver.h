@@ -23,6 +23,7 @@ namespace ai {
 		private:
 			typedef std::unordered_map<std::vector<uint8_t>, std::vector<cube::Twist>> LookupTable;
 			typedef std::function<std::vector<uint8_t>(const cube::Cube&)> Encoder;
+			typedef CubeState<cube::Cube> State;
 
 			//lookup tables for each of the stages
 			LookupTable tables[4];
@@ -48,8 +49,8 @@ namespace ai {
 			//returns true if the parity of the corners and edges of the cube is even
 			bool even_parity(const cube::Cube& cube);
 
-			//returns a vector holding the twists made to arrive at the given CubeState
-			std::vector<cube::Twist> get_twists(const std::shared_ptr<CubeState>& state);
+			//returns a vector holding the twists made to arrive at the given State
+			std::vector<cube::Twist> get_twists(const std::shared_ptr<State>& state);
 
 			//returns a vector that contains the twist sequences that can be made at a stage. If a face
 			//exists in the restricted_faces parameter, only 180 degree turns of that face are allowed. Otherwise, 90 and -90 degree

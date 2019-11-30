@@ -31,7 +31,7 @@ ThreeCubeSolver::ThreeCubeSolver() {
 	};
 
 	for (int stage = 0; stage < 4; stage++) {
-		std::string file_path = table_dir+filenames[stage];
+		auto file_path = table_dir+filenames[stage];
 		if (!load_lookup_table(tables[stage], file_path)) {
 			tables[stage] = create_lookup_table(encoders[stage], generate_twist_sequences(restricted_faces[stage]));
 			save_lookup_table(tables[stage], file_path);
@@ -70,7 +70,7 @@ bool ThreeCubeSolver::even_parity(const cube::Cube& cube) {
 
 }
 
-std::vector<cube::Twist> ThreeCubeSolver::get_twists(const std::shared_ptr<CubeState>& state) {
+std::vector<cube::Twist> ThreeCubeSolver::get_twists(const std::shared_ptr<CubeState<cube::Cube>>& state) {
 	std::vector<cube::Twist> twists;
 
 	auto curr_ptr = state.get();
@@ -243,18 +243,18 @@ std::unordered_map<std::vector<uint8_t>, std::vector<cube::Twist>> ThreeCubeSolv
 			const std::function<std::vector<uint8_t>(const cube::Cube&)> encoder, 
 			const std::vector<TwistSequence> twist_sequences) {
 
-		std::deque<std::shared_ptr<CubeState>> open {std::make_shared<CubeState>(cube::Cube(3))};
+		std::deque<std::shared_ptr<State>> open {std::make_shared<State>(cube::Cube(3))};
 		LookupTable table;
 		while (open.size() > 0) {
-			std::shared_ptr<CubeState>& curr_state = open.front();
+			std::shared_ptr<State>& curr_state = open.front();
 			for (const TwistSequence& twist_seq : twist_sequences) {
 				
-				cube::Cube child_cube(curr_state -> cube);
+				cube::Cube child_cube(curr_state->cube);
 				for (const cube::Twist& twist : twist_seq.twists) {
 					child_cube.rotate(twist);
 				}
 
-				auto child_ptr = std::make_shared<CubeState>(curr_state, std::move(child_cube), twist_seq);
+				auto child_ptr = std::make_shared<State>(curr_state, std::move(child_cube), twist_seq);
 
 				std::vector<uint8_t> child_encoding = encoder(child_cube);
 
