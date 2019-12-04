@@ -19,6 +19,9 @@ namespace cube {
 			//number of pieces in a center
 			uint8_t center_size;
 
+			//width of center in cartesian space
+			uint8_t center_width;
+
 			//map specifies the fixed coordinates for each face
 			std::unordered_map<Face, std::array<int, 2>> face_coords = {
 				{Face::FRONT, {2,edge_width+1}},	
@@ -65,7 +68,7 @@ namespace cube {
 			int get_center_pos(const int center) const {return centers[center];}
 			int get_fixed_face_coord(const Face face) const {return face_coords.at(face)[0];};
 			int get_fixed_face_coord_value(const Face face) const {return face_coords.at(face)[1];};
-			int get_center_width() const {return edge_width+1;}
+			int get_center_width() const {return center_width;}
 
 			//performs a rotation on the cube
 			void rotate(const Twist& twist);
