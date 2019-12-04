@@ -4,6 +4,8 @@
 #include <vector>
 #include <deque>
 #include <unordered_map>
+#include <atomic>
+#include <cassert>
 
 #include "Ogre.h"
 #include "OgreInput.h"
@@ -29,6 +31,9 @@ namespace ui {
 
 				Rotation(const cube::Twist& move, const int cube_size);
 			};
+
+			//number of degrees to rotate each frame
+			std::atomic<int> frames_per_rotation;
 
 			//mutex used to enable the class to be thread-safe
 			std::mutex mex;
@@ -82,6 +87,11 @@ namespace ui {
 
 			//performs the given rotation
 			void rotate(const cube::Twist &move);
+
+			void set_frames_per_rotation(const int frames) {
+				assert(90%frames == 0 && "90 must be divisible by the number of frames to rotate");
+				frames_per_rotation = frames;
+			}
 	
 	};
 }

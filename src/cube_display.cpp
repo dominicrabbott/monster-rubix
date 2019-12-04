@@ -38,6 +38,7 @@ CubeDisplay::Rotation::Rotation(const cube::Twist& move, const int cube_size) {
 
 CubeDisplay::CubeDisplay(const int size, SceneManager* scene_mgr) : scene_mgr(scene_mgr) {
 	create_cube(size);
+	frames_per_rotation = 10;
 }
 
 void CubeDisplay::rotate(const cube::Twist& move) {
@@ -66,7 +67,7 @@ void CubeDisplay::frameRendered(const Ogre::FrameEvent& event)  {
 			}
 		}
 		
-		int degrees_per_frame = curr_rot.total_degrees/3;
+		int degrees_per_frame = curr_rot.total_degrees/frames_per_rotation.load();
 
 		for (int i = curr_rot.from_layer; i<= curr_rot.to_layer; i++) {
 			skeleton[curr_rot.axis][i] -> roll(Degree(degrees_per_frame));

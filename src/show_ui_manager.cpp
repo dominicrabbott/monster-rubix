@@ -13,6 +13,7 @@ cube::Twist ShowUIManager::random_twist() {
 }
 
 bool ShowUIManager::keyPressed(const OgreBites::KeyboardEvent &event) {
+	cube -> set_frames_per_rotation(5);
 	int ENTER = 13;
 	if (event.keysym.sym == ENTER) {
 		for (const auto& twist : solution) {
@@ -25,6 +26,7 @@ bool ShowUIManager::keyPressed(const OgreBites::KeyboardEvent &event) {
 
 void ShowUIManager::setup() {
 	UIManager::setup();
+	cube -> set_frames_per_rotation(10);
 	for (int i = 0; i < 30; i++) {
 		auto twist = random_twist();
 		sym_cube.rotate(twist);	
