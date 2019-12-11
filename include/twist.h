@@ -2,9 +2,10 @@
 #define TWIST_H
 
 #include <cassert>
+#include <ostream>
+#include "face.h"
 
 namespace cube {
-	enum class Face;
 
 	//specifies a twist made to a cube
 	struct Twist {
@@ -47,6 +48,11 @@ namespace cube {
 		template<class Archive>
 		void serialize(Archive &ar, const unsigned version) {}
 	};
+	
+	inline std::ostream &operator<<(std::ostream& stream, const cube::Twist& twist) {
+		stream << "Degrees: " << twist.degrees << " Face: " << twist.face << " Layer: " << twist.layer << " Wide Turn: " << twist.wide_turn;
+		return stream;
+	}
 }
 
 namespace boost {
