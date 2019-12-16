@@ -16,6 +16,9 @@ CubeCenters::CubeCenters(const int size) :
 	centers(std::make_unique<uint8_t[]>(center_size*6)), 
 	center_width(size-1) {
 
+	if (size%2 == 0) {
+		solved_center_values = std::make_unique<cube::CubeCenters>(3);
+	}
 	for (int i = 0; i < center_size*6; i++) {
 		centers[i] = i/center_size;
 	}
@@ -25,7 +28,11 @@ CubeCenters::CubeCenters(const CubeCenters& cube) :
 	CubeBase(cube),
 	center_size(cube.center_size),
 	centers(copy_pieces(cube.centers.get(), center_size*6)),
-	center_width(cube.center_width) {}
+	center_width(cube.center_width) {
+		if (cube.solved_center_values != nullptr) {
+			solved_center_values = std::make_unique<cube::CubeCenters>(*cube.solved_center_values);
+		}	
+	}
 
 CubeCenters& CubeCenters::operator=(const CubeCenters& cube) {
 	assert(cube.size == size && "Cube classes can only be set to objects of the same size");
@@ -33,6 +40,10 @@ CubeCenters& CubeCenters::operator=(const CubeCenters& cube) {
 	for (int i = 0; i < center_size*6; i++) {
 		centers[i] = cube.centers[i];	
 	}
+	
+	if (cube.solved_center_values != nullptr) {
+		solved_center_values = std::make_unique<cube::CubeCenters>(*cube.solved_center_values);
+	}	
 
 	return *this;
 }
@@ -204,8 +215,17 @@ int CubeCenters::get_center_pos(const Coords coords) const {
 			face_coords.push_back(coords[i]);	
 		}
 	}
-
+	
 	return centers[static_cast<int>(face)*center_size + (face_coords[1]-1)*edge_width + face_coords[0]-1];
+}
+
+int CubeCenters::get_solved_center_value(const Face face) const {
+	if (solved_center_values == nullptr) {
+		return centers[static_cast<int>(face)*center_size + (center_size/2)];
+	}
+	else {
+		return solved_center_values->get_center_pos(static_cast<int>(face));
+	}
 }
 
 void CubeCenters::rotate(const Twist& twist) {
@@ -217,7 +237,10 @@ void CubeCenters::rotate(const Twist& twist) {
 			rotate(Twist(-twist.degrees, OPPOSING_FACES.at(twist.face)));
 		}
 		else {
-			rotate_slice(twist.face, i, twist.degrees);	
+			rotate_slice(twist.face, i, twist.degrees);
+			if (solved_center_values != nullptr && i == (size-1)/2) {
+				solved_center_values->rotate(cube::Twist(twist.degrees, twist.face, 1, false));
+			}
 		}	
-	}	
-}
+	}
+}	

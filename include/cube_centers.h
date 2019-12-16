@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <memory>
 #include <array>
+#include <boost/optional.hpp>
 
 #include "face.h"
 #include "cube_base.h"
@@ -16,6 +17,10 @@ namespace cube {
 	//Optimized symbolic representation of the centers of the cube
 	class CubeCenters : public CubeBase {
 		private:
+			//used to track the value of the centers when solved
+			//in the cube's current orientation
+			std::unique_ptr<CubeCenters> solved_center_values;
+
 			//number of pieces in a center
 			uint8_t center_size;
 
@@ -69,6 +74,7 @@ namespace cube {
 			int get_fixed_face_coord(const Face face) const {return face_coords.at(face)[0];};
 			int get_fixed_face_coord_value(const Face face) const {return face_coords.at(face)[1];};
 			int get_center_width() const {return center_width;}
+			int get_solved_center_value(const Face face) const;
 
 			//performs a rotation on the cube
 			void rotate(const Twist& twist);
