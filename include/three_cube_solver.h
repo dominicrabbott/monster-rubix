@@ -12,7 +12,7 @@
 #include "twist.h"
 #include "twist_sequence.h"
 #include "cube_state.h"
-#include "encoding_hasher.h"
+#include "hash.h"
 
 namespace cube {
 	class Cube;
