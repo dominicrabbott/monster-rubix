@@ -44,9 +44,8 @@ std::vector<cube::Twist> CenterSolver::trace_twists(const HeuristicCubeState<cub
 	return twists;
 }
 
-void CenterSolver::rotate(const std::vector<cube::Twist>& twists, cube::CubeCenters& centers) {
+void CenterSolver::rotate(const std::vector<cube::Twist>& twists) {
 	for (const auto& twst : twists) {
-		centers.rotate(twst);
 		for (auto listener_ptr : twist_listeners) {
 			listener_ptr->twist(twst);	
 		}
@@ -118,7 +117,7 @@ std::vector<TwistSequence> CenterSolver::generate_strategy_2(const cube::CubeCen
 	return strategy;
 }
 
-void CenterSolver::solve(cube::CubeCenters& centers) {
+void CenterSolver::solve(const cube::CubeCenters& centers) {
 	int solved_heuristic_value = 0;
 	auto state_compare = [](const std::shared_ptr<State> state1, const std::shared_ptr<State> state2) {
 		return state1->score > state2->score;
@@ -150,7 +149,11 @@ void CenterSolver::solve(cube::CubeCenters& centers) {
 					std::cout << "Scored " << best_heuristic_score  << std::endl;
 				}
 				if (heuristic_value == solved_heuristic_value) {
-					rotate(trace_twists(child_state.get()), centers);
+					for (const auto& twst : trace_twists(child_state.get())) {
+						for (auto listener_ptr : twist_listeners) {
+							listener_ptr->twist(twst);	
+						}
+					}
 					return;
 				}
 				open.push(child_state);

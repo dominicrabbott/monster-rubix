@@ -31,7 +31,7 @@ namespace ai {
 
 			//performs the given twists on the CubeCenters object and updates the TwistListeners
 			//of the twists made
-			void rotate(const std::vector<cube::Twist>& twists, cube::CubeCenters& centers);
+			void rotate(const std::vector<cube::Twist>& twists);
 
 			//generates a set of commutators that, when combined with rotations of the whole 
 			//cube and rotations of each face, can be used to swap any two centers in the given
@@ -53,7 +53,7 @@ namespace ai {
 			void add_twist_listener(TwistListener* listener) {twist_listeners.push_back(listener);}
 
 			//solves the given cube object
-			void solve(cube::CubeCenters& centers);
+			void solve(const cube::CubeCenters& centers);
 	
 	};
 }
