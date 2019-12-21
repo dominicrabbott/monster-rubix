@@ -4,6 +4,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <queue>
+#include <limits>
 #include <iostream>
 
 using namespace ai;
@@ -15,11 +16,16 @@ int CenterSolver::CenterHeuristic::operator()(const cube::CubeCenters& centers) 
 		int face_start_index = static_cast<int>(face)*pieces_in_center;
 		int solved_center_value = centers.get_solved_center_value(face);
 		for (int piece = 0; piece < pieces_in_center; piece++) {
-			if (centers.get_center_pos(face_start_index + piece) == solved_center_value) {
-				heuristic_value++;	
+			int piece_value = centers.get_center_pos(face_start_index + piece);
+			if (piece_value == centers.get_solved_center_value(cube::OPPOSING_FACES.at(face))) {
+				heuristic_value += 2;
+			}
+			else if (piece_value != solved_center_value) {
+				heuristic_value++;
 			}
 		}	
 	}
+
 	return heuristic_value;
 }
 
@@ -113,9 +119,9 @@ std::vector<TwistSequence> CenterSolver::generate_strategy_2(const cube::CubeCen
 }
 
 void CenterSolver::solve(cube::CubeCenters& centers) {
-	int solved_heuristic_value = std::pow(centers.get_size()-2, 2)*6;
+	int solved_heuristic_value = 0;
 	auto state_compare = [](const std::shared_ptr<State> state1, const std::shared_ptr<State> state2) {
-		return state1->score < state2->score;
+		return state1->score > state2->score;
 	};
 	std::priority_queue<std::shared_ptr<State>, std::vector<std::shared_ptr<State>>, decltype(state_compare)> open(state_compare);
 	open.push(std::make_shared<State>(centers));
@@ -123,8 +129,8 @@ void CenterSolver::solve(cube::CubeCenters& centers) {
 	auto twist_sequences = generate_strategy_1(centers);
 	
 	int states_searched = 0;
-	int strategy_change_threshold = centers.get_size()*5000;
-	int most_placed_pieces = 0;
+	int strategy_change_threshold = centers.get_size()*3000;
+	int best_heuristic_score = std::numeric_limits<int>::max();
 	std::shared_ptr<State> best_state;
 	while (!open.empty()) {
 		auto curr_state = open.top();
@@ -138,10 +144,10 @@ void CenterSolver::solve(cube::CubeCenters& centers) {
 				seen.insert(child_cube);
 				auto child_state = std::make_shared<State>(curr_state, std::move(child_cube), twist_seq);
 				int heuristic_value = child_state->score;
-				if (heuristic_value > most_placed_pieces) {
-					most_placed_pieces = heuristic_value;
+				if (heuristic_value < best_heuristic_score) {
+					best_heuristic_score = heuristic_value;
 					best_state = child_state;
-					std::cout << most_placed_pieces << " pieces placed" << std::endl;
+					std::cout << "Scored " << best_heuristic_score  << std::endl;
 				}
 				if (heuristic_value == solved_heuristic_value) {
 					rotate(trace_twists(child_state.get()), centers);
@@ -155,7 +161,7 @@ void CenterSolver::solve(cube::CubeCenters& centers) {
 						open.pop();	
 					}
 					open.push(best_state);
-					std::cout << "Changing Strategy. Best achived: "  << most_placed_pieces << std::endl;
+					std::cout << "Changing Strategy. Best achived: "  << best_heuristic_score << std::endl;
 					break;
 				}
 			}
