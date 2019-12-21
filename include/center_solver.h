@@ -12,8 +12,6 @@
 #include <memory>
 #include <boost/optional.hpp>
 
-int main();
-
 namespace ai {
 	class CenterSolver {
 		private:
@@ -34,13 +32,12 @@ namespace ai {
 			//performs the given twists on the CubeCenters object and updates the TwistListeners
 			//of the twists made
 			void rotate(const std::vector<cube::Twist>& twists, cube::CubeCenters& centers);
+
+			//generates a set of commutators that, when combined with rotations of the whole 
+			//cube and rotations of each face, can be used to swap any two centers in the given
+			//CubeCenters object
+			std::vector<TwistSequence> generate_commutators(const cube::CubeCenters& centers);
 			
-			//returns the commutators needed to solve the centers on a 4x4x4
-			std::vector<TwistSequence> get_commutators_4();
-
-			//returns the commutators needed to solve the centers on a 5x5x5
-			std::vector<TwistSequence> get_commutators_5();
-
 			//returns the TwistSequences that are used to build the state-space during the first strategy
 			//used to solve the cube. The first strategy consists of 90 and -90 degree rotations to every
 			//layer of the cube. 

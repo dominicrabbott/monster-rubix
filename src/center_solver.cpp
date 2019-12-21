@@ -47,45 +47,27 @@ void CenterSolver::rotate(const std::vector<cube::Twist>& twists, cube::CubeCent
 	}
 }
 
-std::vector<TwistSequence> CenterSolver::get_commutators_4() {
+std::vector<TwistSequence> CenterSolver::generate_commutators(const cube::CubeCenters& centers) {
 	using namespace cube;
+	
 	std::vector<TwistSequence> commutators;
-	commutators.push_back(TwistSequence({
-		Twist(-90, Face::LEFT, 1, false),
-		Twist(90, Face::TOP),
-		Twist(90, Face::RIGHT, 1, false),
-		Twist(-90, Face::TOP),
-		Twist(90, Face::LEFT, 1, false),
-		Twist(90, Face::TOP),
-		Twist(-90, Face::RIGHT, 1),
-
-	    }));
-
-	return commutators;
-}
-
-std::vector<TwistSequence> CenterSolver::get_commutators_5() {
-	using namespace cube;
-	std::vector<TwistSequence> commutators;
-	commutators.push_back(TwistSequence({
-		Twist(-90, Face::LEFT, 1, false),
-		Twist(90, Face::TOP),
-		Twist(90, Face::RIGHT, 1, false),
-		Twist(-90, Face::TOP),
-		Twist(90, Face::LEFT, 1, false),
-		Twist(90, Face::TOP),
-		Twist(-90, Face::RIGHT, 1, false),
-	}));
-	commutators.push_back(TwistSequence({
-		Twist(90, Face::RIGHT, 1, false),
-		Twist(90, Face::TOP),
-		Twist(-90, Face::RIGHT, 2, false),
-		Twist(90, Face::TOP),
-		Twist(90, Face::TOP),
-		Twist(90, Face::RIGHT, 2, false),
-		Twist(90, Face::TOP),
-		Twist(-90, Face::RIGHT, 1, false),
-	}));
+	int center_width = centers.get_size()-2;
+	int bound_x = center_width/2;
+	int bound_y = std::ceil(center_width/2.0f);
+	for (int x = 0; x < bound_x; x++) {
+		for (int y = 0; y < bound_y; y++) {
+			TwistSequence comm({
+					Twist(-90, Face::LEFT, x+1, false),
+					Twist(-90, Face::TOP),
+					Twist(-90, Face::LEFT, center_width-y, false),
+					Twist(90, Face::TOP),
+					Twist(90, Face::LEFT, x+1, false),
+					Twist(-90, Face::TOP),
+					Twist(90, Face::LEFT, center_width-y, false),
+			});
+			commutators.push_back(comm);
+		}	
+	}
 
 	return commutators;
 }
@@ -108,11 +90,6 @@ std::vector<TwistSequence> CenterSolver::generate_strategy_1(const cube::CubeCen
 
 std::vector<TwistSequence> CenterSolver::generate_strategy_2(const cube::CubeCenters& centers) {
 	using namespace cube;
-	static std::unordered_map<int, std::vector<TwistSequence>> commutators = {
-		{4, get_commutators_4()},
-		{5, get_commutators_5()},
-	};
-
 	std::vector<TwistSequence> strategy;
 	
 	std::array<int, 2> rotations = {90, -90};
@@ -128,7 +105,7 @@ std::vector<TwistSequence> CenterSolver::generate_strategy_2(const cube::CubeCen
 		}	
 	}
 
-	for (const auto& twist_seq : commutators[centers.get_size()]) {
+	for (const auto& twist_seq : generate_commutators(centers)) {
 		strategy.push_back(twist_seq);	
 	}
 	
@@ -146,7 +123,7 @@ void CenterSolver::solve(cube::CubeCenters& centers) {
 	auto twist_sequences = generate_strategy_1(centers);
 	
 	int states_searched = 0;
-	int strategy_change_threshold = 30000;
+	int strategy_change_threshold = centers.get_size()*10000;
 	int most_placed_pieces = 0;
 	std::shared_ptr<State> best_state;
 	while (!open.empty()) {
