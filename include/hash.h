@@ -20,14 +20,6 @@ namespace std {
 			return boost::hash_range(arr.begin(), arr.end());
 		}
 	};
-	template<typename T>
-	inline bool operator==(const std::vector<T> vec1, const std::vector<T> vec2) {
-		return std::equal(vec1.begin(), vec1.end(), vec2.begin());
-	}
-	template<typename T, size_t size>
-	inline bool operator==(const std::array<T, size> arr1, const std::array<T, size> arr2) {
-		return std::equal(arr1.begin(), arr1.end(), arr2.begin());
-	}
 	template<>
 	struct hash<cube::Twist> {
 		size_t operator()(const cube::Twist& twist) const {
