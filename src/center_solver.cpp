@@ -123,7 +123,7 @@ void CenterSolver::solve(cube::CubeCenters& centers) {
 	auto twist_sequences = generate_strategy_1(centers);
 	
 	int states_searched = 0;
-	int strategy_change_threshold = centers.get_size()*10000;
+	int strategy_change_threshold = centers.get_size()*5000;
 	int most_placed_pieces = 0;
 	std::shared_ptr<State> best_state;
 	while (!open.empty()) {
