@@ -3,6 +3,7 @@
 
 #include "cube_centers.h"
 #include "twist_listener.h"
+#include "twist_provider.h"
 #include "twist.h"
 #include "heuristic_cube_state.h"
 #include "hash.h"
@@ -10,10 +11,11 @@
 #include <unordered_set>
 #include <boost/functional/hash.hpp>
 #include <memory>
+#include <cmath>
 #include <boost/optional.hpp>
 
 namespace ai {
-	class CenterSolver {
+	class CenterSolver : public TwistProvider {
 		private:
 			//callable that returns a value determined by applying a heuristic 
 			//to the given cube object
@@ -22,16 +24,6 @@ namespace ai {
 			};
 
 			typedef HeuristicCubeState<cube::CubeCenters, CenterHeuristic> State;
-
-			//the observers that are notified when a twist is made to solve the cube
-			std::vector<TwistListener*> twist_listeners;
-
-			//returns the twists made to arrive at the given state from the root state
-			std::vector<cube::Twist> trace_twists(const State* state);
-
-			//performs the given twists on the CubeCenters object and updates the TwistListeners
-			//of the twists made
-			void rotate(const std::vector<cube::Twist>& twists);
 
 			//generates a set of commutators that, when combined with rotations of the whole 
 			//cube and rotations of each face, can be used to swap any two centers in the given
@@ -48,12 +40,18 @@ namespace ai {
 			//90 and -90 degree rotations of the whole cube around every axis, and the set of center commutators
 			//needed to swap any 2 centers in the given CubeCenters object
 			std::vector<TwistSequence> generate_strategy_2(const cube::CubeCenters& centers);
-		public:
-			//adds an listener that is to be notified when twists are made to solve the cube
-			void add_twist_listener(TwistListener* listener) {twist_listeners.push_back(listener);}
 
+			//counts the number of center pieces solved in the given CubeCenters object
+			int count_solved_pieces(const cube::CubeCenters& centers);
+
+			//returns the number of pieces in one center of the given CubeCenters object
+			int pieces_per_center(const cube::CubeCenters& centers) {
+				return std::pow(centers.get_size()-2,2);
+			}
+		public:
+			
 			//solves the given cube object
-			void solve(const cube::CubeCenters& centers);
+			void solve(const cube::CubeCenters& root_state);
 	
 	};
 }

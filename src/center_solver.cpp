@@ -1,7 +1,7 @@
 #include "center_solver.h"
 #include "cube_centers.h"
 #include "face.h"
-#include <cmath>
+#include "search.h"
 #include <stdexcept>
 #include <queue>
 #include <limits>
@@ -27,29 +27,6 @@ int CenterSolver::CenterHeuristic::operator()(const cube::CubeCenters& centers) 
 	}
 
 	return heuristic_value;
-}
-
-std::vector<cube::Twist> CenterSolver::trace_twists(const HeuristicCubeState<cube::CubeCenters, CenterSolver::CenterHeuristic>* state) {
-	std::vector<cube::Twist> twists;
-	const State* curr_state = state;
-	while (curr_state->parent != nullptr) {
-		auto& curr_twists = curr_state->twist_seq->twists;
-		for (auto it = curr_twists.rbegin(); it != curr_twists.rend(); it++) {
-			twists.push_back(*it);	
-		}
-		curr_state = curr_state->parent.get();
-	}
-	std::reverse(twists.begin(), twists.end());
-	std::cout << "Solved in " << twists.size() << " twists"  << std::endl;
-	return twists;
-}
-
-void CenterSolver::rotate(const std::vector<cube::Twist>& twists) {
-	for (const auto& twst : twists) {
-		for (auto listener_ptr : twist_listeners) {
-			listener_ptr->twist(twst);	
-		}
-	}
 }
 
 std::vector<TwistSequence> CenterSolver::generate_commutators(const cube::CubeCenters& centers) {
@@ -117,59 +94,39 @@ std::vector<TwistSequence> CenterSolver::generate_strategy_2(const cube::CubeCen
 	return strategy;
 }
 
-void CenterSolver::solve(const cube::CubeCenters& centers) {
-	int solved_heuristic_value = 0;
-	auto state_compare = [](const std::shared_ptr<State> state1, const std::shared_ptr<State> state2) {
-		return state1->score > state2->score;
-	};
-	std::priority_queue<std::shared_ptr<State>, std::vector<std::shared_ptr<State>>, decltype(state_compare)> open(state_compare);
-	open.push(std::make_shared<State>(centers));
-	std::unordered_set<cube::CubeCenters> seen = {centers};
-	auto twist_sequences = generate_strategy_1(centers);
-	
-	int states_searched = 0;
-	int strategy_change_threshold = centers.get_size()*3000;
-	int best_heuristic_score = std::numeric_limits<int>::max();
-	std::shared_ptr<State> best_state;
-	while (!open.empty()) {
-		auto curr_state = open.top();
-		open.pop();
-		for (const auto& twist_seq : twist_sequences) {
-			cube::CubeCenters child_cube(curr_state->cube);
-			for (const auto& twist : twist_seq.twists) {
-				child_cube.rotate(twist);
+int CenterSolver::count_solved_pieces(const cube::CubeCenters& centers) {
+	int placed_pieces = 0;
+	for (const auto face : cube::ALL_FACES) {
+		for (int i = 0; i < pieces_per_center(centers); i++) {
+			int piece_index = static_cast<int>(face)*pieces_per_center(centers) + i;
+			if (centers.get_center_pos(piece_index) == centers.get_solved_center_value(face)) {
+				placed_pieces++;
 			}
-			if (!seen.count(child_cube)) {
-				seen.insert(child_cube);
-				auto child_state = std::make_shared<State>(curr_state, std::move(child_cube), twist_seq);
-				int heuristic_value = child_state->score;
-				if (heuristic_value < best_heuristic_score) {
-					best_heuristic_score = heuristic_value;
-					best_state = child_state;
-					std::cout << "Scored " << best_heuristic_score  << std::endl;
-				}
-				if (heuristic_value == solved_heuristic_value) {
-					for (const auto& twst : trace_twists(child_state.get())) {
-						for (auto listener_ptr : twist_listeners) {
-							listener_ptr->twist(twst);	
-						}
-					}
-					return;
-				}
-				open.push(child_state);
-				states_searched++;
-				if (states_searched == strategy_change_threshold) {
-					twist_sequences = generate_strategy_2(centers);
-					while (!open.empty()) {
-						open.pop();	
-					}
-					open.push(best_state);
-					std::cout << "Changing Strategy. Best achived: "  << best_heuristic_score << std::endl;
-					break;
-				}
-			}
-		}
+		}	
 	}
 
-	throw std::invalid_argument("The given cube couldn't be solved");
+	return placed_pieces;
+}
+
+void CenterSolver::solve(const cube::CubeCenters& root_state) {
+	cube::CubeCenters curr_state(root_state);
+	Search<cube::CubeCenters, CenterHeuristic> search;
+
+	int states_searched = 0;
+	int strategy_change_threshold = curr_state.get_size()*5000;
+	auto strategy_1_finished = [strategy_change_threshold, states_searched=0] (const cube::CubeCenters& centers) mutable {
+		states_searched++;
+		return states_searched == strategy_change_threshold;
+	};
+	auto strategy_1_twists = search.best_first_search(curr_state, generate_strategy_1(curr_state), strategy_1_finished);
+	notify_listeners(strategy_1_twists);
+	for (const auto& twist : strategy_1_twists) {
+		curr_state.rotate(twist);	
+	}
+	std::cout << "Strategy 1 finished. Starting strategy 2\n";
+	auto strategy_2_finished = [this](const cube::CubeCenters& centers) {
+		return this->count_solved_pieces(centers) == this->pieces_per_center(centers)*6;
+	};
+	notify_listeners(search.best_first_search(curr_state, generate_strategy_2(curr_state), strategy_2_finished));
+	std::cout << "Done solving centers"  << std::endl;
 }
