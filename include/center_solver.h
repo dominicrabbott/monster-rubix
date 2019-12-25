@@ -23,8 +23,6 @@ namespace ai {
 				int operator()(const cube::CubeCenters& centers);
 			};
 
-			typedef HeuristicCubeState<cube::CubeCenters, CenterHeuristic> State;
-
 			//generates a set of commutators that, when combined with rotations of the whole 
 			//cube and rotations of each face, can be used to swap any two centers in the given
 			//CubeCenters object

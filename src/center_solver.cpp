@@ -110,7 +110,6 @@ int CenterSolver::count_solved_pieces(const cube::CubeCenters& centers) {
 
 void CenterSolver::solve(const cube::CubeCenters& root_state) {
 	cube::CubeCenters curr_state(root_state);
-	Search<cube::CubeCenters, CenterHeuristic> search;
 
 	int states_searched = 0;
 	int strategy_change_threshold = curr_state.get_size()*2500;
@@ -118,7 +117,7 @@ void CenterSolver::solve(const cube::CubeCenters& root_state) {
 		states_searched++;
 		return states_searched == strategy_change_threshold;
 	};
-	auto strategy_1_twists = search.best_first_search(curr_state, generate_strategy_1(curr_state), strategy_1_finished);
+	auto strategy_1_twists = search::best_first_search<cube::CubeCenters, CenterHeuristic>(curr_state, generate_strategy_1(curr_state), strategy_1_finished);
 	notify_listeners(strategy_1_twists);
 	for (const auto& twist : strategy_1_twists) {
 		curr_state.rotate(twist);	
@@ -127,6 +126,6 @@ void CenterSolver::solve(const cube::CubeCenters& root_state) {
 	auto strategy_2_finished = [this](const cube::CubeCenters& centers) {
 		return this->count_solved_pieces(centers) == this->pieces_per_center(centers)*6;
 	};
-	notify_listeners(search.best_first_search(curr_state, generate_strategy_2(curr_state), strategy_2_finished));
+	notify_listeners(search::best_first_search<cube::CubeCenters, CenterHeuristic>(curr_state, generate_strategy_2(curr_state), strategy_2_finished));
 	std::cout << "Done solving centers"  << std::endl;
 }
