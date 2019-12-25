@@ -28,11 +28,16 @@ namespace cube {
 
 			//helper functions for manipulating the pieces
 			
-			//flips the orientation of an edge
+			//flips the orientation of an edge if the given face is Top or Bottom
 			void flip_edge(const int edge, const cube::Face face) {
 				if (face == cube::Face::TOP || face == cube::Face::BOTTOM) {
 					edges[edge] ^= 0x80;
 				}
+			}
+
+			//flips the orientation of an edge unconditionally
+			void flip_edge(const int edge) {
+				edges[edge] ^= 0x80;	
 			}
 
 			//rotates a corner clockwise

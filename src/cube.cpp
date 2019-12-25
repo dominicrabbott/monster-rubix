@@ -99,6 +99,17 @@ void Cube::rotate_face(const Face face, const int degrees) {
 		{Face::RIGHT, {9,5,1,6}},
 	};
 
+	//array specifies whether the pieces in each edge need to be shifted
+	//in reverse order
+	static std::unordered_map<Face, std::array<bool, 4>> reversed_shift_order = {
+		{Face::LEFT, {0,1,1,0}},
+		{Face::TOP, {0,0,1,1}},
+		{Face::BACK, {0,0,1,1}},
+		{Face::BOTTOM, {0,1,1,0}},
+		{Face::FRONT, {0,1,1,0}},
+		{Face::RIGHT, {0,0,1,1}},
+	};
+
 	//the corners that lie in the left face
 	static std::unordered_set<int> left_corners = {0,3,4,7};
 
@@ -136,9 +147,14 @@ void Cube::rotate_face(const Face face, const int degrees) {
 	//manipulate the edges of the face to be rotated
 	auto& edge_shifts = face_edges[face];
 	for (int i = 0; i < edge_width; i++) {
-		auto current_shifts = edge_shifts;
+		std::array<int, 4> current_shifts;
 		for (int j = 0; j < 4; j++) {
-			current_shifts[j] = edge_shifts[j]*edge_width + i;
+			if (reversed_shift_order[face][j]) {
+				current_shifts[j] = edge_shifts[j]*edge_width + edge_width - 1 - i; 
+			}
+			else {
+				current_shifts[j] = edge_shifts[j]*edge_width + i;
+			}
 		}	
 		
 		//The edges are shifted among the edge positions of the 
@@ -174,9 +190,9 @@ void Cube::rotate_slice(const Face face, const int layer, const int degrees) {
 	int rotations = degrees == 90 ? 1 : 3;
 
 	//determine the inner layer of the cube to be rotated. The inner layers are numbered starting
-	//from the Front, Left, and bottom faces and going to the opposite face
+	//from the Back , Left, and bottom faces and going to the opposite face
 	int inner_layer;
-	if (face == Face::FRONT || face == Face::LEFT || face == Face::BOTTOM) {
+	if (face == Face::BACK || face == Face::LEFT || face == Face::BOTTOM) {
 		inner_layer = layer-1;	
 	}
 	else {
@@ -184,18 +200,17 @@ void Cube::rotate_slice(const Face face, const int layer, const int degrees) {
 	}
 	
 	//manipulate the edges in the slice being rotated
-	auto edge_shifts = slice_edges[face];
+	std::array<int, 4> edge_shifts;
 	for (int i = 0; i < 4; i++) {
-		edge_shifts[i] += inner_layer;	
+		edge_shifts[i] = slice_edges[face][i]*edge_width + inner_layer;	
 	}
-	//if the face being rotated is the top or bottom face, the edges are flipped
+	//flip the orientation of the edges in the slice
 	for (int i = 0; i < 4; i++) {
-		flip_edge(edge_shifts[i], face);
+		flip_edge(edge_shifts[i]);
 	}
 	
 	//the edges are moved 
 	shift_pieces(edges.get(), edge_shifts, degrees);
-
 }
 
 void Cube::rotate(const Twist& twist) {
@@ -207,7 +222,7 @@ void Cube::rotate(const Twist& twist) {
 			rotate(Twist(-twist.degrees, OPPOSING_FACES.at(twist.face)));
 		}
 		else {
-			rotate_slice(twist.face, twist.layer, twist.degrees);	
+			rotate_slice(twist.face, i, twist.degrees);	
 		}	
 	}	
 }
