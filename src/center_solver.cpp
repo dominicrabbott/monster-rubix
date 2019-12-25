@@ -25,7 +25,7 @@ int CenterSolver::CenterHeuristic::operator()(const cube::CubeCenters& centers) 
 			}
 		}	
 	}
-
+	
 	return heuristic_value;
 }
 
@@ -113,7 +113,7 @@ void CenterSolver::solve(const cube::CubeCenters& root_state) {
 	Search<cube::CubeCenters, CenterHeuristic> search;
 
 	int states_searched = 0;
-	int strategy_change_threshold = curr_state.get_size()*5000;
+	int strategy_change_threshold = curr_state.get_size()*2500;
 	auto strategy_1_finished = [strategy_change_threshold, states_searched=0] (const cube::CubeCenters& centers) mutable {
 		states_searched++;
 		return states_searched == strategy_change_threshold;
