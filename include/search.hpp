@@ -8,7 +8,7 @@ namespace ai {
 		std::vector<cube::Twist> twists;
 		const State* curr_state = state;
 		while (curr_state->parent != nullptr) {
-			auto& curr_twists = curr_state->twist_seq->twists;
+			auto& curr_twists = curr_state->twist_seq.get();
 			for (auto it = curr_twists.rbegin(); it != curr_twists.rend(); it++) {
 				twists.push_back(*it);	
 			}
@@ -36,7 +36,7 @@ namespace ai {
 			open.pop();
 			for (const auto& twist_seq : twist_sequences) {
 				StateType child_cube(curr_state->cube);
-				for (const auto& twist : twist_seq.twists) {
+				for (const auto& twist : twist_seq) {
 					child_cube.rotate(twist);
 				}
 				if (!seen.count(child_cube)) {

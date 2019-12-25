@@ -62,7 +62,7 @@ std::vector<TwistSequence> CenterSolver::generate_strategy_1(const cube::CubeCen
 	for (auto& face : slice_faces) {
 		for (int slice = 0; slice < centers.get_size(); slice++) {
 			for (const int degrees : rotations) {
-				strategy.push_back(TwistSequence(cube::Twist(degrees, face, slice, false)));
+				strategy.push_back(TwistSequence({cube::Twist(degrees, face, slice, false)}));
 			}
 		}	
 	}
@@ -78,12 +78,12 @@ std::vector<TwistSequence> CenterSolver::generate_strategy_2(const cube::CubeCen
 	std::array<cube::Face, 3> axes = {Face::LEFT, Face::BOTTOM, Face::BACK};
 	for (const auto& face : ALL_FACES) {
 		for (const int degrees : rotations) {
-			strategy.push_back(TwistSequence(Twist(degrees, face)));	
+			strategy.push_back(TwistSequence({Twist(degrees, face)}));	
 		}
 	}
 	for (const auto& axis : axes) {
 		for (const int degrees : rotations) {
-			strategy.push_back(TwistSequence(Twist(degrees, axis, centers.get_size()-1)));
+			strategy.push_back(TwistSequence({Twist(degrees, axis, centers.get_size()-1)}));
 		}	
 	}
 

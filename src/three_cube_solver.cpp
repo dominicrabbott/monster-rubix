@@ -76,7 +76,7 @@ std::vector<cube::Twist> ThreeCubeSolver::get_twists(const std::shared_ptr<CubeS
 	auto curr_ptr = state.get();
 
 	while (curr_ptr -> twist_seq) {
-		for (const cube::Twist& twist : curr_ptr -> twist_seq.get().twists) {
+		for (const cube::Twist& twist : curr_ptr -> twist_seq.get()) {
 			twists.push_back(cube::Twist(-twist.degrees, twist.face, twist.layer, twist.wide_turn));
 		}
 		
@@ -94,12 +94,12 @@ std::vector<TwistSequence> ThreeCubeSolver::generate_twist_sequences(const std::
 		cube::Face face = cube::ALL_FACES[i];
 		if (restricted_faces.count(face) == 0) {
 			for (int degrees = -90; degrees <= 90; degrees += 180) {
-				twist_sequences.push_back(TwistSequence(cube::Twist(degrees, face)));
+				twist_sequences.push_back(TwistSequence({cube::Twist(degrees, face)}));
 			}		
 		}
 
 		else {
-			twist_sequences.push_back(TwistSequence(std::vector<cube::Twist> {
+			twist_sequences.push_back(TwistSequence({
 				cube::Twist(90, face),
 				cube::Twist(90, face),
 			}));	
@@ -250,7 +250,7 @@ std::unordered_map<std::vector<uint8_t>, std::vector<cube::Twist>> ThreeCubeSolv
 			for (const TwistSequence& twist_seq : twist_sequences) {
 				
 				cube::Cube child_cube(curr_state->cube);
-				for (const cube::Twist& twist : twist_seq.twists) {
+				for (const cube::Twist& twist : twist_seq) {
 					child_cube.rotate(twist);
 				}
 

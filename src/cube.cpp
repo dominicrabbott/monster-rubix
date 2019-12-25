@@ -136,9 +136,9 @@ void Cube::rotate_face(const Face face, const int degrees) {
 	//manipulate the edges of the face to be rotated
 	auto& edge_shifts = face_edges[face];
 	for (int i = 0; i < edge_width; i++) {
-		auto& current_shifts = edge_shifts;
+		auto current_shifts = edge_shifts;
 		for (int j = 0; j < 4; j++) {
-			current_shifts[j] = edge_shifts[j] + i;
+			current_shifts[j] = edge_shifts[j]*edge_width + i;
 		}	
 		
 		//The edges are shifted among the edge positions of the 
@@ -147,7 +147,7 @@ void Cube::rotate_face(const Face face, const int degrees) {
 		
 		//the orientation of each edge involved in the rotation is flipped
 		for (int j = 0; j < 4; j++) {
-			flip_edge(edge_shifts[j]*edge_width + i, face);	
+			flip_edge(current_shifts[j], face);	
 		}
 	}
 }
@@ -184,18 +184,16 @@ void Cube::rotate_slice(const Face face, const int layer, const int degrees) {
 	}
 	
 	//manipulate the edges in the slice being rotated
-	
 	auto edge_shifts = slice_edges[face];
-	//if the face being rotated is the top or bottom face, the edges are flipped
-	for (int i = 0; i < 4; i++) {
-		flip_edge(edge_shifts[i]+inner_layer, face);
-	}
-	
-	//the edges are moved 
 	for (int i = 0; i < 4; i++) {
 		edge_shifts[i] += inner_layer;	
 	}
-
+	//if the face being rotated is the top or bottom face, the edges are flipped
+	for (int i = 0; i < 4; i++) {
+		flip_edge(edge_shifts[i], face);
+	}
+	
+	//the edges are moved 
 	shift_pieces(edges.get(), edge_shifts, degrees);
 
 }
