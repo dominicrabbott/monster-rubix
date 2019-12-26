@@ -1,12 +1,12 @@
 #include <cstdlib>
 #include <memory>
-#include <iostream>
 #include <boost/optional.hpp>
 
 #include "ai_ui_manager.h"
 #include "twist.h"
 #include "face.h"
 #include "center_solver.h"
+#include "edge_solver.h"
 
 using namespace ui;
 
@@ -26,13 +26,18 @@ void AIUIManager::setup() {
 	for (int i = 0; i < 30; i++) {
 		cube::Twist twist = random_twist();
 		sym_cube_centers.rotate(twist);
+		sym_cube.rotate(twist);
 		cube -> rotate(twist);
 	}
 
 }
 
 void AIUIManager::solve() {
-	ai::CenterSolver solver;
-	solver.add_twist_listener(this);
-	solver.solve(sym_cube_centers);
+	ai::CenterSolver center_solver;
+	center_solver.add_twist_listener(this);
+	center_solver.solve(sym_cube_centers);
+	
+	ai::EdgeSolver edge_solver;
+	edge_solver.add_twist_listener(this);
+	edge_solver.solve(sym_cube);
 }

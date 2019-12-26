@@ -30,6 +30,8 @@ namespace ui{
 
 			//makes the given twists to the UI
 			void twist(const cube::Twist& twist) override {
+				sym_cube_centers.rotate(twist);
+				sym_cube.rotate(twist);
 				cube->rotate(twist);	
 			}
 
