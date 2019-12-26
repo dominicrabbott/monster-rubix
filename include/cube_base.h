@@ -32,6 +32,7 @@ namespace cube {
 
 			//getters for the state of the cube
 			int get_size() const {return size;}
+			int get_edge_width() const {return edge_width;}
 	};
 }
 
