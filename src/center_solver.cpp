@@ -11,11 +11,10 @@ using namespace ai;
 
 int CenterSolver::CenterHeuristic::operator()(const cube::CubeCenters& centers) {
 	int heuristic_value = 0;
-	int pieces_in_center = std::pow(centers.get_size()-2,2);
 	for (const auto face : cube::ALL_FACES) {
-		int face_start_index = static_cast<int>(face)*pieces_in_center;
+		int face_start_index = static_cast<int>(face)*centers.get_pieces_in_center();
 		int solved_center_value = centers.get_solved_center_value(face);
-		for (int piece = 0; piece < pieces_in_center; piece++) {
+		for (int piece = 0; piece < centers.get_pieces_in_center(); piece++) {
 			int piece_value = centers.get_center_pos(face_start_index + piece);
 			if (piece_value == centers.get_solved_center_value(cube::OPPOSING_FACES.at(face))) {
 				heuristic_value += 2;
@@ -33,19 +32,18 @@ std::vector<TwistSequence> CenterSolver::generate_commutators(const cube::CubeCe
 	using namespace cube;
 	
 	std::vector<TwistSequence> commutators;
-	int center_width = centers.get_size()-2;
-	int bound_x = center_width/2;
-	int bound_y = std::ceil(center_width/2.0f);
+	int bound_x = centers.get_edge_width()/2;
+	int bound_y = std::ceil(centers.get_edge_width()/2.0f);
 	for (int x = 0; x < bound_x; x++) {
 		for (int y = 0; y < bound_y; y++) {
 			TwistSequence comm({
 					Twist(-90, Face::LEFT, x+1, false),
 					Twist(-90, Face::TOP),
-					Twist(-90, Face::LEFT, center_width-y, false),
+					Twist(-90, Face::LEFT, centers.get_edge_width()-y, false),
 					Twist(90, Face::TOP),
 					Twist(90, Face::LEFT, x+1, false),
 					Twist(-90, Face::TOP),
-					Twist(90, Face::LEFT, center_width-y, false),
+					Twist(90, Face::LEFT, centers.get_edge_width()-y, false),
 			});
 			commutators.push_back(comm);
 		}	
@@ -97,8 +95,8 @@ std::vector<TwistSequence> CenterSolver::generate_strategy_2(const cube::CubeCen
 int CenterSolver::count_solved_pieces(const cube::CubeCenters& centers) {
 	int placed_pieces = 0;
 	for (const auto face : cube::ALL_FACES) {
-		for (int i = 0; i < pieces_per_center(centers); i++) {
-			int piece_index = static_cast<int>(face)*pieces_per_center(centers) + i;
+		for (int i = 0; i < centers.get_pieces_in_center(); i++) {
+			int piece_index = static_cast<int>(face)*centers.get_pieces_in_center() + i;
 			if (centers.get_center_pos(piece_index) == centers.get_solved_center_value(face)) {
 				placed_pieces++;
 			}
@@ -124,7 +122,7 @@ void CenterSolver::solve(const cube::CubeCenters& root_state) {
 	}
 	std::cout << "Strategy 1 finished. Beginning commutator based search\n";
 	auto strategy_2_finished = [this](const cube::CubeCenters& centers) {
-		return this->count_solved_pieces(centers) == this->pieces_per_center(centers)*6;
+		return this->count_solved_pieces(centers) == centers.get_pieces_in_center()*6;
 	};
 	notify_listeners(search::best_first_search<cube::CubeCenters, CenterHeuristic>(curr_state, generate_strategy_2(curr_state), strategy_2_finished));
 

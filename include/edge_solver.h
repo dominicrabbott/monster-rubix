@@ -36,7 +36,6 @@ namespace ai {
 			};
 
 			std::array<int, 2> degrees = {-90, 90};
-			int edge_count = 12;
 
 			//generates the commutators nessesary to swap any two edges on the front-top
 			//and front-back edges of the cube

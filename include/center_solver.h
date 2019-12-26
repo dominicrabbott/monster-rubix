@@ -41,11 +41,6 @@ namespace ai {
 
 			//counts the number of center pieces solved in the given CubeCenters object
 			int count_solved_pieces(const cube::CubeCenters& centers);
-
-			//returns the number of pieces in one center of the given CubeCenters object
-			int pieces_per_center(const cube::CubeCenters& centers) {
-				return std::pow(centers.get_size()-2,2);
-			}
 		public:
 			
 			//solves the given cube object
