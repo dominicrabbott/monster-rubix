@@ -1,6 +1,7 @@
 #include "edge_solver.h"
 #include "hash.h"
 #include "search.h"
+#include "twist_utils.h"
 #include <unordered_set>
 #include <algorithm>
 #include <queue>
@@ -169,17 +170,6 @@ bool EdgeSolver::edge_is_solved(const cube::Cube& cube, const int edge) {
 	return true;
 }
 
-std::vector<TwistSequence> EdgeSolver::generate_all_face_twists() {
-	std::vector<TwistSequence> twist_sequences;
-	for (const auto face : cube::ALL_FACES) {
-		for (const int deg : degrees) {
-			twist_sequences.push_back(TwistSequence({cube::Twist(deg, face)}));
-		}	
-	}
-
-	return twist_sequences;
-}
-
 std::vector<cube::Twist> EdgeSolver::solve_first_ten_edges(const cube::Cube& cube) {
 	using namespace cube;
 	std::array<Face, 3> axis_faces = {Face::LEFT, Face::BOTTOM, Face::BACK};
@@ -187,14 +177,10 @@ std::vector<cube::Twist> EdgeSolver::solve_first_ten_edges(const cube::Cube& cub
 	std::vector<TwistSequence> twist_sequences;
 	auto edge_commutators = generate_edge_commutators(cube);
 	twist_sequences.insert(twist_sequences.end(), edge_commutators.begin(), edge_commutators.end());
-	auto face_rotations = generate_all_face_twists();
+	auto face_rotations = TwistUtils::generate_face_twists();
 	twist_sequences.insert(twist_sequences.end(), face_rotations.begin(), face_rotations.end());
-
-	for (const auto axis : axis_faces) {
-		for (const int deg : degrees) {
-			twist_sequences.push_back(TwistSequence({Twist(deg, axis, cube.get_size()-1)}));
-		}	
-	}
+	auto cube_rotations = TwistUtils::generate_cube_rotations(cube);
+	twist_sequences.insert(twist_sequences.end(), cube_rotations.begin(), cube_rotations.end());
 	
 	auto is_finished = [this](const cube::Cube& cube) {
 		int unsolved_edges = 0;
@@ -219,7 +205,7 @@ std::vector<cube::Twist> EdgeSolver::solve_last_two_edges(const cube::Cube& cube
 	if (cube.get_size()%2 != 0) {
 		twist_sequences.push_back(generate_edge_flipper(cube));
 	}
-	auto face_rotations = generate_all_face_twists();
+	auto face_rotations = TwistUtils::generate_face_twists();
 	twist_sequences.insert(twist_sequences.end(), face_rotations.begin(), face_rotations.end());
 	twist_sequences.push_back({
 		Twist(90, Face::FRONT),

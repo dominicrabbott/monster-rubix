@@ -47,9 +47,6 @@ namespace ai {
 			//odd cubes
 			TwistSequence generate_edge_flipper(const cube::Cube& cube);
 
-			//generates 90 and -90 degree twists for every face
-			std::vector<TwistSequence> generate_all_face_twists();
-
 			//returns true if the specified edge is solved on the given cube
 			bool edge_is_solved(const cube::Cube& cube, const int edge);
 

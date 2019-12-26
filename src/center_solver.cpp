@@ -2,6 +2,7 @@
 #include "cube_centers.h"
 #include "face.h"
 #include "search.h"
+#include "twist_utils.h"
 #include <stdexcept>
 #include <queue>
 #include <limits>
@@ -55,12 +56,10 @@ std::vector<TwistSequence> CenterSolver::generate_commutators(const cube::CubeCe
 std::vector<TwistSequence> CenterSolver::generate_strategy_1(const cube::CubeCenters& centers) {
 	std::vector<TwistSequence> strategy;
 
-	std::array<cube::Face, 3> slice_faces = {cube::Face::LEFT, cube::Face::BOTTOM, cube::Face::BACK};
-	std::array<int, 2> rotations = {90, -90};
-	for (auto& face : slice_faces) {
+	for (auto& face : TwistUtils::AXIS_FACES) {
 		for (int slice = 0; slice < centers.get_size(); slice++) {
-			for (const int degrees : rotations) {
-				strategy.push_back(TwistSequence({cube::Twist(degrees, face, slice, false)}));
+			for (const int deg : TwistUtils::DEGREES) {
+				strategy.push_back(TwistSequence({cube::Twist(deg, face, slice, false)}));
 			}
 		}	
 	}
@@ -72,16 +71,14 @@ std::vector<TwistSequence> CenterSolver::generate_strategy_2(const cube::CubeCen
 	using namespace cube;
 	std::vector<TwistSequence> strategy;
 	
-	std::array<int, 2> rotations = {90, -90};
-	std::array<cube::Face, 3> axes = {Face::LEFT, Face::BOTTOM, Face::BACK};
 	for (const auto& face : ALL_FACES) {
-		for (const int degrees : rotations) {
+		for (const int degrees : TwistUtils::DEGREES) {
 			strategy.push_back(TwistSequence({Twist(degrees, face)}));	
 		}
 	}
-	for (const auto& axis : axes) {
-		for (const int degrees : rotations) {
-			strategy.push_back(TwistSequence({Twist(degrees, axis, centers.get_size()-1)}));
+	for (const auto& axis : TwistUtils::AXIS_FACES) {
+		for (const int deg : TwistUtils::DEGREES) {
+			strategy.push_back(TwistSequence({Twist(deg, axis, centers.get_size()-1)}));
 		}	
 	}
 

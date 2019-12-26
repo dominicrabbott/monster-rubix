@@ -10,11 +10,11 @@
 #include "three_cube_solver.h"
 #include "cube.h"
 #include "face.h"
+#include "twist_utils.h"
 
 using namespace ai;
 ThreeCubeSolver::ThreeCubeSolver() {
-
-
+	using namespace cube;
 	std::string filenames[] = {
 		"g1_table.bin",
 		"g2_table.bin",
@@ -22,7 +22,6 @@ ThreeCubeSolver::ThreeCubeSolver() {
 		"g4_table.bin",
 	};
 
-	using namespace cube;
 	std::unordered_set<cube::Face> restricted_faces[] {
 		{},
 		{Face::TOP, Face::BOTTOM},	
@@ -70,16 +69,14 @@ bool ThreeCubeSolver::even_parity(const cube::Cube& cube) {
 
 }
 
-std::vector<cube::Twist> ThreeCubeSolver::get_twists(const std::shared_ptr<CubeState<cube::Cube>>& state) {
+std::vector<cube::Twist> ThreeCubeSolver::get_twists(const CubeState<cube::Cube>* state) {
 	std::vector<cube::Twist> twists;
 
-	auto curr_ptr = state.get();
-
-	while (curr_ptr -> twist_seq) {
-		for (const cube::Twist& twist : curr_ptr -> twist_seq.get()) {
+	auto curr_ptr = state;
+	while (curr_ptr->parent != nullptr) {
+		for (const auto& twist : curr_ptr->twist_seq.get()) {
 			twists.push_back(cube::Twist(-twist.degrees, twist.face, twist.layer, twist.wide_turn));
 		}
-		
 		curr_ptr = curr_ptr -> parent.get();	
 	}
 	
@@ -89,22 +86,19 @@ std::vector<cube::Twist> ThreeCubeSolver::get_twists(const std::shared_ptr<CubeS
 
 std::vector<TwistSequence> ThreeCubeSolver::generate_twist_sequences(const std::unordered_set<cube::Face>& restricted_faces) {
 	std::vector<TwistSequence> twist_sequences;
-
-	for (int i = 0; i < 6; i++) {
-		cube::Face face = cube::ALL_FACES[i];
-		if (restricted_faces.count(face) == 0) {
-			for (int degrees = -90; degrees <= 90; degrees += 180) {
-				twist_sequences.push_back(TwistSequence({cube::Twist(degrees, face)}));
-			}		
-		}
-
-		else {
+	for (const auto face : cube::ALL_FACES) {
+		if (restricted_faces.count(face)) {
 			twist_sequences.push_back(TwistSequence({
 				cube::Twist(90, face),
 				cube::Twist(90, face),
 			}));	
-		}	
-	}
+		}
+		else {
+			for (const int deg : TwistUtils::DEGREES) {
+				twist_sequences.push_back(TwistSequence({cube::Twist(deg, face)}));
+			}		
+		}
+	}	
 
 	return twist_sequences;
 }
@@ -146,7 +140,6 @@ std::vector<uint8_t> ThreeCubeSolver::encode_g1(const cube::Cube& cube) {
 			buffer_index = 0;	
 		}
 	}
-
 	encoding.push_back(buffer);
 
 	return encoding;
@@ -167,7 +160,6 @@ std::vector<uint8_t> ThreeCubeSolver::encode_g2(const cube::Cube& cube) {
 			buffer_index = 0;	
 		}	
 	}
-
 	for (int i = 0; i < 12; i++) {
 		buffer |= (edge_slices[cube.get_edge_pos(i)] == 1 ? 1 : 0) << buffer_index;
 		buffer_index++;
@@ -178,7 +170,6 @@ std::vector<uint8_t> ThreeCubeSolver::encode_g2(const cube::Cube& cube) {
 			buffer_index = 0;	
 		}
 	}
-
 	encoding.push_back(buffer);
 
 	return encoding;
@@ -221,7 +212,6 @@ std::vector<uint8_t> ThreeCubeSolver::encode_g3(const cube::Cube& cube) {
 
 		
 	}
-
 	encoding.push_back(even_parity(cube));
 
 	return encoding;
@@ -246,20 +236,17 @@ std::unordered_map<std::vector<uint8_t>, std::vector<cube::Twist>> ThreeCubeSolv
 		std::deque<std::shared_ptr<State>> open {std::make_shared<State>(cube::Cube(3))};
 		LookupTable table;
 		while (open.size() > 0) {
-			std::shared_ptr<State>& curr_state = open.front();
+			auto& curr_state = open.front();
 			for (const TwistSequence& twist_seq : twist_sequences) {
-				
 				cube::Cube child_cube(curr_state->cube);
-				for (const cube::Twist& twist : twist_seq) {
+				for (const auto& twist : twist_seq) {
 					child_cube.rotate(twist);
 				}
 
 				auto child_ptr = std::make_shared<State>(curr_state, std::move(child_cube), twist_seq);
-
 				std::vector<uint8_t> child_encoding = encoder(child_cube);
-
-				if (table.count(child_encoding) == 0) {
-					table.insert(std::make_pair(child_encoding, get_twists(child_ptr)));
+				if (!table.count(child_encoding)) {
+					table.insert(std::make_pair(child_encoding, get_twists(child_ptr.get())));
 					open.push_back(child_ptr);
 				}	
 			}
