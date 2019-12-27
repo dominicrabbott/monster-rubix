@@ -17,6 +17,7 @@
 
 namespace cube {
 	class Cube;
+	class CubeCenters;
 }
 
 namespace ai {
@@ -47,9 +48,35 @@ namespace ai {
 			//directory the lookup tables are stored to
 			std::string table_dir = "tables/";
 
-			//returns true if the parity of the corners and edges of the cube is even
-			bool even_parity(const cube::Cube& cube);
+			//returns the edge position of the specified edge on a reduced
+			//cube
+			int get_edge_pos(const cube::Cube& cube, const int edge) {
+				return cube.get_edge_pos(edge*cube.get_edge_width());	
+			}
+			
+			//returns the edge orientation of the specified edge on a reduced
+			//cube
+			int get_edge_orientation(const cube::Cube& cube, const int edge) {
+				return cube.get_edge_orientation(edge*cube.get_edge_width());	
+			}
 
+			//orients the cube so it is in its 'natural' orientation, ie each center is
+			//in the position it was before the cube was scrambled
+			std::vector<cube::Twist> orient_cube(const cube::CubeCenters& centers);
+
+			//returns true if the parity of the corner permutation is even
+			bool even_corner_parity(const cube::Cube& cube);
+
+			//returns true if the parity of the edge permutation is even
+			bool even_edge_parity(const cube::Cube& cube);
+
+			//returns true if the parity of the given sequence is even
+			bool even_parity(const std::vector<int>& sequence);
+
+			//returns the twists needed to solve orientation and permutation parity issues 
+			//in even-dimensioned cubes
+			TwistSequence solve_parity(const cube::Cube& cube);
+			
 			//returns a vector holding the twists needed to transition from the given state
 			//to the root state, which is the goal state of a stage
 			std::vector<cube::Twist> get_twists(const State* state);
@@ -81,6 +108,10 @@ namespace ai {
 			//to create the state-space	
 			LookupTable create_lookup_table(const Encoder encoder, const std::vector<TwistSequence> twist_sequences);
 
+			//notifies the twist listeners of the twists in the given twist sequence and performs those
+			//twists on the given cube object
+			void execute_partial_solution(const TwistSequence& twist_sequence, cube::Cube& cube);
+
 
 		public:
 			//constructor loads the lookup tables
@@ -88,7 +119,7 @@ namespace ai {
 
 			//solves the given cube object and returns a vector that contains the twists that were made
 			//to solve the cube
-			void solve(const cube::Cube& cube);
+			void solve(const cube::Cube& cube, const cube::CubeCenters& centers);
 	};
 }
 

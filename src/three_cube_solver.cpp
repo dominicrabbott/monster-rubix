@@ -9,8 +9,10 @@
 
 #include "three_cube_solver.h"
 #include "cube.h"
+#include "cube_centers.h"
 #include "face.h"
 #include "twist_utils.h"
+#include "search.h"
 
 using namespace ai;
 ThreeCubeSolver::ThreeCubeSolver() {
@@ -40,33 +42,137 @@ ThreeCubeSolver::ThreeCubeSolver() {
 			std::cout << "Loading table for stage " << stage << " complete\n";
 		}
 	}
-
-
 }
 
-bool ThreeCubeSolver::even_parity(const cube::Cube& cube) {
-	int corner_pos[8];
-	for (int i = 0; i < 8; i++) {
-		corner_pos[i] = cube.get_corner_pos(i);	
+std::vector<cube::Twist> ThreeCubeSolver::orient_cube(const cube::CubeCenters& centers) {
+	auto is_finished = [](const cube::CubeCenters& centers) {
+		for (const auto face : TwistUtils::AXIS_FACES) {
+			if (centers.get_solved_center_value(face) != static_cast<int>(face)) {
+				return false;	
+			}	
+		}
+
+		return true;
+	};
+
+	return search::breadth_first_search<cube::CubeCenters>(centers, TwistUtils::generate_cube_rotations(centers), is_finished);
+}
+
+bool ThreeCubeSolver::even_corner_parity(const cube::Cube& cube) {
+	std::vector<int> corner_positions;
+	for (int corner = 0; corner < cube.get_corner_count(); corner++) {
+		corner_positions.push_back(cube.get_corner_pos(corner));	
 	}
 
+	return even_parity(corner_positions);
+}
+
+bool ThreeCubeSolver::even_edge_parity(const cube::Cube& cube) {
+	std::vector<int> edge_positions;
+	for (int edge = 0; edge < cube.get_edge_count(); edge++) {
+		edge_positions.push_back(get_edge_pos(cube, edge));	
+	}
+
+	return even_parity(edge_positions);
+}
+
+bool ThreeCubeSolver::even_parity(const std::vector<int>& sequence) {
+	auto sequence_copy = sequence;
 	int cycles = 0;
 	int start_index = 0;
-	while (start_index < 8) {
-		if (corner_pos[start_index] < 8) {
+	int marked_value = sequence.size();
+	while (start_index < sequence_copy.size()) {
+		if (sequence_copy[start_index] < marked_value) {
 			int cycle_index = start_index;
-			while (corner_pos[cycle_index] < 8) {
-				int& element = corner_pos[cycle_index];
+			while (sequence_copy[cycle_index] != marked_value) {
+				int& element = sequence_copy[cycle_index];
 				cycle_index = element;
-				element += 8;
+				element = marked_value;
 			}
 			cycles++;	
 		}
 		start_index++;
 	}
 
-	return (8-cycles)%2 == 0 ? 1 : 0;
+	return (sequence.size()-cycles)%2 == 0;
 
+}
+
+TwistSequence ThreeCubeSolver::solve_parity(const cube::Cube& cube) {
+	using namespace cube;
+	int flipped_edges = 0;
+	for (int edge = 0; edge < cube.get_edge_count(); edge++) {
+		if (get_edge_orientation(cube, edge) == 1) {
+			flipped_edges++;
+		}
+	}
+	bool orientation_parity_error = flipped_edges%2 != 0;
+	bool permutation_parity_error = even_corner_parity(cube) != even_edge_parity(cube);
+	int middle = (cube.get_size()-1)/2;
+	if (orientation_parity_error && permutation_parity_error) {
+		return TwistSequence({
+			Twist(90, Face::RIGHT, middle),
+			Twist(90, Face::FRONT),
+			Twist(90, Face::FRONT),
+			Twist(90, Face::TOP),
+			Twist(90, Face::TOP),
+			Twist(90, Face::LEFT, middle),
+			Twist(90, Face::FRONT),
+			Twist(-90, Face::TOP),
+			Twist(90, Face::RIGHT),
+			Twist(-90, Face::TOP),
+			Twist(90, Face::RIGHT, middle),
+			Twist(90, Face::RIGHT, middle),
+			Twist(90, Face::BACK),
+			Twist(90, Face::BACK),
+			Twist(-90, Face::RIGHT, middle),
+			Twist(90, Face::BACK),
+			Twist(90, Face::BACK),
+			Twist(90, Face::RIGHT, middle),
+			Twist(90, Face::RIGHT, middle),
+		});
+	}
+	else if (orientation_parity_error) {
+		return TwistSequence({
+			Twist(90, Face::RIGHT, middle),
+			Twist(90, Face::BACK),
+			Twist(90, Face::TOP),
+			Twist(90, Face::TOP),
+			Twist(-90, Face::BACK),
+			Twist(90, Face::RIGHT, middle, false),
+			Twist(90, Face::BACK),
+			Twist(90, Face::BACK),
+			Twist(90, Face::LEFT, middle, false),
+			Twist(90, Face::BACK),
+			Twist(90, Face::BACK),
+			Twist(90, Face::RIGHT, middle, false),
+			Twist(-90, Face::BACK),
+			Twist(90, Face::BOTTOM),
+			Twist(90, Face::BOTTOM),
+			Twist(90, Face::BACK),
+			Twist(90, Face::RIGHT, middle),
+		});
+	}
+	else if (permutation_parity_error) {
+		return TwistSequence({
+			Twist(90, Face::RIGHT, middle),
+			Twist(90, Face::TOP),
+			Twist(90, Face::BOTTOM),
+			Twist(90, Face::LEFT),
+			Twist(90, Face::LEFT),
+			Twist(90, Face::TOP),
+			Twist(90, Face::BOTTOM),
+			Twist(90, Face::FRONT, cube.get_size()-2),
+			Twist(90, Face::FRONT, cube.get_size()-2),
+			Twist(-90, Face::FRONT),
+			Twist(-90, Face::FRONT),
+			Twist(90, Face::RIGHT, middle),
+			Twist(-90, Face::FRONT, cube.get_size()-2),
+			Twist(-90, Face::FRONT, cube.get_size()-2),
+		});
+	}
+	
+	return TwistSequence();
 }
 
 std::vector<cube::Twist> ThreeCubeSolver::get_twists(const CubeState<cube::Cube>* state) {
@@ -130,8 +236,8 @@ std::vector<uint8_t> ThreeCubeSolver::encode_g1(const cube::Cube& cube) {
 	uint8_t buffer = 0;
 	int buffer_index = 0;
 
-	for (int i = 0; i < 12; i++) {
-		buffer |= cube.get_edge_orientation(i) << buffer_index;
+	for (int i = 0; i < cube.get_edge_count(); i++) {
+		buffer |= get_edge_orientation(cube, i) << buffer_index;
 		buffer_index++;
 
 		if (buffer_index == 8) {
@@ -160,8 +266,8 @@ std::vector<uint8_t> ThreeCubeSolver::encode_g2(const cube::Cube& cube) {
 			buffer_index = 0;	
 		}	
 	}
-	for (int i = 0; i < 12; i++) {
-		buffer |= (edge_slices[cube.get_edge_pos(i)] == 1 ? 1 : 0) << buffer_index;
+	for (int i = 0; i < cube.get_edge_count(); i++) {
+		buffer |= (edge_slices[get_edge_pos(cube, i)] == 1) << buffer_index;
 		buffer_index++;
 
 		if (buffer_index == 8) {
@@ -198,9 +304,9 @@ std::vector<uint8_t> ThreeCubeSolver::encode_g3(const cube::Cube& cube) {
 		}	
 	}
 
-	for (int i = 0; i < 12; i++) {
-		if (edge_slices[cube.get_edge_pos(i)] != 1) {
-			buffer |= edge_slices[cube.get_edge_pos(i)] << buffer_index;
+	for (int i = 0; i < cube.get_edge_count(); i++) {
+		if (edge_slices[get_edge_pos(cube, i)] != 1) {
+			buffer |= edge_slices[get_edge_pos(cube, i)] << buffer_index;
 			buffer_index += 2;
 			
 			if (buffer_index == 8) {
@@ -212,17 +318,17 @@ std::vector<uint8_t> ThreeCubeSolver::encode_g3(const cube::Cube& cube) {
 
 		
 	}
-	encoding.push_back(even_parity(cube));
+	encoding.push_back(even_corner_parity(cube));
 
 	return encoding;
 }
 
 std::vector<uint8_t> ThreeCubeSolver::encode_g4(const cube::Cube& cube) {
 	std::vector<uint8_t> encoding;
-	for (int i = 0; i < 12; i++) {
-		encoding.push_back(cube.get_edge_pos(i));	
+	for (int i = 0; i < cube.get_edge_count(); i++) {
+		encoding.push_back(get_edge_pos(cube, i));	
 	}
-	for (int i = 0; i < 8; i++) {
+	for (int i = 0; i < cube.get_corner_count(); i++) {
 		encoding.push_back(cube.get_corner_pos(i));	
 	}
 
@@ -256,15 +362,20 @@ std::unordered_map<std::vector<uint8_t>, std::vector<cube::Twist>> ThreeCubeSolv
 		return table;
 }
 
-void ThreeCubeSolver::solve(const cube::Cube& cube) {
+void ThreeCubeSolver::execute_partial_solution(const TwistSequence& twist_sequence, cube::Cube& cube) {
+	notify_listeners(twist_sequence);
+	for (const auto& twist : twist_sequence) {
+		cube.rotate(twist);	
+	}
+}
+
+void ThreeCubeSolver::solve(const cube::Cube& cube, const cube::CubeCenters& centers) {
 	cube::Cube curr_state(cube);
 
+	execute_partial_solution(orient_cube(centers), curr_state);
+	execute_partial_solution(solve_parity(curr_state), curr_state);
 	for (int stage = 0; stage < 4; stage++) {
-		auto stage_solution = tables[stage][encoders[stage](curr_state)];
-		notify_listeners(stage_solution);
-		for (const auto& twist : stage_solution) {
-			curr_state.rotate(twist);
-		}
+		execute_partial_solution(tables[stage][encoders[stage](curr_state)], curr_state);
 		std::cout << "Stage " << stage << " complete\n";
 	}
 }
