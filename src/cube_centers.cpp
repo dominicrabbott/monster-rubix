@@ -229,6 +229,9 @@ int CubeCenters::get_solved_center_value(const Face face) const {
 }
 
 void CubeCenters::rotate(const Twist& twist) {
+	if (solved_center_values != nullptr && twist.layer == size-1 && twist.wide_turn) {
+		solved_center_values -> rotate(Twist(twist.degrees, twist.face, 1, false));	
+	}
 	for (int i = twist.layer; i >= (twist.wide_turn ? 0 : twist.layer); i--) {
 		if (i == 0) {
 			rotate_face(twist.face, twist.degrees);	
@@ -238,9 +241,6 @@ void CubeCenters::rotate(const Twist& twist) {
 		}
 		else {
 			rotate_slice(twist.face, i, twist.degrees);
-			if (solved_center_values != nullptr && i == (size-1)/2) {
-				solved_center_values->rotate(cube::Twist(twist.degrees, twist.face, 1, false));
-			}
 		}	
 	}
 }	
