@@ -107,9 +107,10 @@ void CenterSolver::solve(const cube::CubeCenters& root_state) {
 	cube::CubeCenters curr_state(root_state);
 	int states_searched = 0;
 	int strategy_change_threshold = curr_state.get_size()*2500;
-	auto strategy_1_finished = [strategy_change_threshold, states_searched=0] (const cube::CubeCenters& centers) mutable {
+	int total_center_pieces = curr_state.get_pieces_in_center()*6;
+	auto strategy_1_finished = [strategy_change_threshold, states_searched=0, total_center_pieces, this] (const cube::CubeCenters& centers) mutable {
 		states_searched++;
-		return states_searched == strategy_change_threshold;
+		return states_searched == strategy_change_threshold || this->count_solved_pieces(centers) == total_center_pieces;
 	};
 	std::cout << "Beginning solving the centers using strategy 1\n";
 	auto strategy_1_twists = search::best_first_search<cube::CubeCenters, CenterHeuristic>(curr_state, generate_strategy_1(curr_state), strategy_1_finished);
@@ -118,8 +119,8 @@ void CenterSolver::solve(const cube::CubeCenters& root_state) {
 		curr_state.rotate(twist);	
 	}
 	std::cout << "Strategy 1 finished. Beginning commutator based search\n";
-	auto strategy_2_finished = [this](const cube::CubeCenters& centers) {
-		return this->count_solved_pieces(centers) == centers.get_pieces_in_center()*6;
+	auto strategy_2_finished = [this, total_center_pieces](const cube::CubeCenters& centers) {
+		return this->count_solved_pieces(centers) == total_center_pieces;
 	};
 	notify_listeners(search::best_first_search<cube::CubeCenters, CenterHeuristic>(curr_state, generate_strategy_2(curr_state), strategy_2_finished));
 
