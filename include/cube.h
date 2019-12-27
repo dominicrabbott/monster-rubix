@@ -73,6 +73,7 @@ namespace cube {
 			int get_edge_orientation(const int edge) const {return edges[edge] >> 7;}
 			int get_corner_orientation(const int corner) const {return corners[corner] >> 3;}
 			int get_edge_count() const {return 12;}
+			int get_corner_count() const {return 8;};
 
 			//performs a rotation on the cube
 			void rotate(const Twist& twist);
