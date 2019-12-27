@@ -3,25 +3,21 @@
 
 #include "OgreInput.h"
 #include "three_cube_solver.h"
+#include "twist_listener.h"
 #include "ui_manager.h"
 #include "cube.h"
+#include "twist.h"
 #include <boost/optional.hpp>
 
-namespace cube {
-	class Twist;
-}
-
 namespace ui {
-	class ShowUIManager : public UIManager {
+	class ShowUIManager : public UIManager, public ai::TwistListener {
 		private:
-			//once the cube is solved, the series of rotations made to arrive
-			//at the solution is stored here
+			//stores the series of rotations made to solve the cube once a solution
+			//is found
 			std::vector<cube::Twist> solution;
 
-			//returns a random twist object
 			cube::Twist random_twist();
 
-			//symbolic representation of the cube
 			cube::Cube sym_cube;
 
 			//solves when enter is pressed
@@ -29,10 +25,13 @@ namespace ui {
 
 			//scrambles the cube
 			void setup() override;
+
+			void twist(const cube::Twist& twist) override {
+				solution.push_back(twist);	
+			}
 		public:
 			ShowUIManager(): UIManager(3), sym_cube(3) {}
 
-			//solves the cube
 			void solve();
 				
 	};

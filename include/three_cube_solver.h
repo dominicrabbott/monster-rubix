@@ -13,13 +13,14 @@
 #include "twist_sequence.h"
 #include "cube_state.h"
 #include "hash.h"
+#include "twist_provider.h"
 
 namespace cube {
 	class Cube;
 }
 
 namespace ai {
-	class ThreeCubeSolver {
+	class ThreeCubeSolver : public TwistProvider {
 		private:
 			typedef std::unordered_map<std::vector<uint8_t>, std::vector<cube::Twist>> LookupTable;
 			typedef std::function<std::vector<uint8_t>(const cube::Cube&)> Encoder;
@@ -87,7 +88,7 @@ namespace ai {
 
 			//solves the given cube object and returns a vector that contains the twists that were made
 			//to solve the cube
-			std::vector<cube::Twist> solve(cube::Cube& cube);
+			void solve(const cube::Cube& cube);
 	};
 }
 

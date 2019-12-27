@@ -256,16 +256,15 @@ std::unordered_map<std::vector<uint8_t>, std::vector<cube::Twist>> ThreeCubeSolv
 		return table;
 }
 
-std::vector<cube::Twist> ThreeCubeSolver::solve(cube::Cube& cube) {
-	std::vector<cube::Twist> moves;
+void ThreeCubeSolver::solve(const cube::Cube& cube) {
+	cube::Cube curr_state(cube);
 
 	for (int stage = 0; stage < 4; stage++) {
-		for (const auto& twist : tables[stage][encoders[stage](cube)]) {
-			moves.push_back(twist);
-			cube.rotate(twist);	
+		auto stage_solution = tables[stage][encoders[stage](curr_state)];
+		notify_listeners(stage_solution);
+		for (const auto& twist : stage_solution) {
+			curr_state.rotate(twist);
 		}
 		std::cout << "Stage " << stage << " complete\n";
 	}
-	
-	return moves;
 }

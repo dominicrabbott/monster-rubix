@@ -35,5 +35,7 @@ void ShowUIManager::setup() {
 }
 
 void ShowUIManager::solve() {
-	solution = ai::ThreeCubeSolver().solve(sym_cube);
+	ai::ThreeCubeSolver solver;
+	solver.add_twist_listener(this);
+	solver.solve(sym_cube);
 }
