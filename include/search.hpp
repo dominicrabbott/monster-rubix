@@ -1,5 +1,4 @@
 #include <memory>
-#include <deque>
 #include <unordered_set>
 #include <queue>
 #include "heuristic_cube_state.h"
@@ -75,13 +74,13 @@ namespace ai {
 				if (is_finished(root_state)) {
 					return std::vector<cube::Twist>();	
 				}
-				std::deque<std::shared_ptr<State>> open;
-				open.push_back(std::make_shared<State>(root_state));
+				std::queue<std::shared_ptr<State>> open;
+				open.push(std::make_shared<State>(root_state));
 				std::unordered_set<CubeType> seen = {root_state};
 				
 				while (!open.empty()) {
 					auto curr_state = open.front();
-					open.pop_front();
+					open.pop();
 					for (const auto& twist_seq : twist_sequences) {
 						CubeType child_cube(curr_state->cube);
 						for (const auto& twist : twist_seq) {
@@ -93,7 +92,7 @@ namespace ai {
 							if (is_finished(child_state->cube)) {
 								return trace_twists(child_state.get());
 							}
-							open.push_back(child_state);
+							open.push(child_state);
 						}
 					}
 				}
