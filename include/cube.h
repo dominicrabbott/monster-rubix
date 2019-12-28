@@ -1,11 +1,10 @@
 #ifndef CUBE_H
 #define CUBE_H
 
+#include "cube_base.h"
+#include "face.h"
 #include <unordered_map>
 #include <memory>
-
-#include "face.h"
-#include "cube_base.h"
 
 namespace cube {
 	class Twist;
@@ -14,6 +13,9 @@ namespace cube {
 	//exculding the centers, adapted from http://www.cube20.org/src/cubepos.pdf
 	class Cube : public CubeBase {
 		private:
+			int corner_count = 8;
+			int edge_count = 12;
+
 			//first 7 bits specify position, last bit specifies orientation
 			//orientation bit is flipped on every rotation
 			std::unique_ptr<uint8_t[]> edges;
@@ -28,10 +30,11 @@ namespace cube {
 
 			//helper functions for manipulating the pieces
 			
-			//flips the orientation of an edge if the given face is Top or Bottom
+			//flips the orientation of an edge if the given face is Top or Bottom. Used for
+			//face rotations
 			void flip_edge(const int edge, const cube::Face face) {
 				if (face == cube::Face::TOP || face == cube::Face::BOTTOM) {
-					edges[edge] ^= 0x80;
+					flip_edge(edge);
 				}
 			}
 
@@ -56,9 +59,6 @@ namespace cube {
 			//performs a 90 degree rotation on the specified slice of the cube
 			void rotate_slice(const Face face, const int layer, const int degrees);
 
-			//copies an array of pieces and returns a unique_ptr to the data
-			std::unique_ptr<uint8_t[]> copy_pieces(const uint8_t* array, const int size); 
-
 		public:
 			//constructs a solved cube of the given size
 			Cube(const int size);
@@ -72,8 +72,8 @@ namespace cube {
 			int get_corner_pos(const int corner) const {return corners[corner] & 7;}
 			int get_edge_orientation(const int edge) const {return edges[edge] >> 7;}
 			int get_corner_orientation(const int corner) const {return corners[corner] >> 3;}
-			int get_edge_count() const {return 12;}
-			int get_corner_count() const {return 8;};
+			int get_edge_count() const {return edge_count;}
+			int get_corner_count() const {return corner_count;}
 
 			//performs a rotation on the cube
 			void rotate(const Twist& twist);

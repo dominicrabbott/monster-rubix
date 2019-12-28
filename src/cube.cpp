@@ -1,68 +1,49 @@
+#include "cube.h"
+#include "twist.h"
 #include <cmath>
 #include <iostream>
 #include <unordered_set>
-
-#include "cube.h"
-#include "twist.h"
+#include <algorithm>
 
 using namespace cube;
 
 Cube::Cube(const int size) : 
 	CubeBase(size),
-	edges(std::make_unique<uint8_t[]>(edge_width*12)),
-	corners(std::make_unique<uint8_t[]>(8)) {
+	edges(std::make_unique<uint8_t[]>(edge_width*edge_count)),
+	corners(std::make_unique<uint8_t[]>(corner_count)) {
 
-	for (int i = 0; i < edge_width*12; i++) {
+	for (int i = 0; i < edge_width*edge_count; i++) {
 		edges[i] = i/edge_width;
 	}
-	for (int i = 0; i < 8; i++) {
+	for (int i = 0; i < corner_count; i++) {
 		corners[i] = i;
 	}
 }
 
 Cube::Cube(const Cube& cube) : 
 	CubeBase(cube),
-	edges(copy_pieces(cube.edges.get(), edge_width*12)), 
-	corners(copy_pieces(cube.corners.get(), 8)) {}
+	edges(copy_pieces(cube.edges.get(), edge_width*edge_count)), 
+	corners(copy_pieces(cube.corners.get(), corner_count)) {}
 
 Cube& Cube::operator=(const Cube& cube) {
 	assert(cube.size == size && "Cube classes can only be set to objects of the same size");
 
-	for (int i = 0; i < edge_width*12; i++) {
-		edges[i] = cube.edges[i];	
-	}
-	for (int i = 0; i < 8; i++) {
-		corners[i] = cube.corners[i];	
-	}
+	std::copy(cube.edges.get(), cube.edges.get() + edge_width*edge_count, edges.get());
+	std::copy(cube.corners.get(), cube.corners.get() + corner_count, corners.get());
 
 	return *this;
 }
 
 bool Cube::operator==(const Cube& cube) const {
-	for (int i = 0; i < edge_width*12; i++) {
-		if (cube.edges[i] != edges[i]) {
-			return false;	
-		}	
+	if (cube.size != size) {
+		return false;	
 	}
 
-	for (int i = 0; i < 8; i++) {
-		if (cube.corners[i] != corners[i]) {
-			return false;
-		}		
-	}
-
-	return true;
+	return std::equal(cube.edges.get(), cube.edges.get() + edge_width*edge_count, edges.get()) &&
+		std::equal(cube.corners.get(), cube.corners.get() + corner_count, corners.get());
 }
 
-std::unique_ptr<uint8_t[]> Cube::copy_pieces(const uint8_t* array, const int size) {
-	std::unique_ptr<uint8_t[]> result = std::make_unique<uint8_t[]>(size);
 
-	for (int i = 0; i < size; i++) {
-		result[i] = array[i];	
-	}
-
-	return result;
-}
 
 void Cube::rotate_face(const Face face, const int degrees) {
 	//map specifies the indicies of the corner pieces that exist in each face.
@@ -99,8 +80,9 @@ void Cube::rotate_face(const Face face, const int degrees) {
 		{Face::RIGHT, {9,5,1,6}},
 	};
 
-	//array specifies whether the pieces in each edge need to be shifted
-	//in reverse order
+	//each boolean in this map correponds to an edge in the 'face_edges' map.
+	//The boolean value specifies whether a piece n needs to be shifted to position n when it is
+	//shifted to the next edge, or whether it needs to be reversed, and shifted to position (edge_width-n)
 	static std::unordered_map<Face, std::array<bool, 4>> reversed_shift_order = {
 		{Face::LEFT, {0,1,1,0}},
 		{Face::TOP, {0,0,1,1}},
@@ -117,11 +99,10 @@ void Cube::rotate_face(const Face face, const int degrees) {
 	static std::unordered_set<int> right_corners = {1,2,5,6};
 
 	int rotations = degrees == 90 ? 1 : 3;	
-	
 	auto& corner_shifts = face_corners[face];
 	//manipulate the corners of the face to be rotated
 	if ((face != cube::Face::RIGHT) && (face != cube::Face::LEFT)) {
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < corner_shifts.size(); i++) {
 			//Rotate the corners
 			//
 			//In a 90 degree rotation of a face other than the right or left faces, if a 
@@ -129,8 +110,8 @@ void Cube::rotate_face(const Face face, const int degrees) {
 			//face, the corner is rotated clockwise. Otherwise, the corner is rotated 
 			//counter-clockwise
 			int rotation;
-			if ((right_corners.count(corner_shifts[(i+rotations)%4]) && right_corners.count(corner_shifts[i])) || 
-					(left_corners.count(corner_shifts[(i+rotations)%4]) && left_corners.count(corner_shifts[i]))) {
+			if ((right_corners.count(corner_shifts[(i+rotations)%corner_shifts.size()]) && right_corners.count(corner_shifts[i])) || 
+					(left_corners.count(corner_shifts[(i+rotations)%corner_shifts.size()]) && left_corners.count(corner_shifts[i]))) {
 				rotation = degrees == 90 ? 1 : 2;
 			}
 			else {
@@ -148,7 +129,7 @@ void Cube::rotate_face(const Face face, const int degrees) {
 	auto& edge_shifts = face_edges[face];
 	for (int i = 0; i < edge_width; i++) {
 		std::array<int, 4> current_shifts;
-		for (int j = 0; j < 4; j++) {
+		for (int j = 0; j < current_shifts.size(); j++) {
 			if (reversed_shift_order[face][j]) {
 				current_shifts[j] = edge_shifts[j]*edge_width + edge_width - 1 - i; 
 			}
@@ -162,7 +143,7 @@ void Cube::rotate_face(const Face face, const int degrees) {
 		shift_pieces(edges.get(), current_shifts, degrees);
 		
 		//the orientation of each edge involved in the rotation is flipped
-		for (int j = 0; j < 4; j++) {
+		for (int j = 0; j < current_shifts.size(); j++) {
 			flip_edge(current_shifts[j], face);	
 		}
 	}
@@ -201,11 +182,11 @@ void Cube::rotate_slice(const Face face, const int layer, const int degrees) {
 	
 	//manipulate the edges in the slice being rotated
 	std::array<int, 4> edge_shifts;
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < edge_shifts.size(); i++) {
 		edge_shifts[i] = slice_edges[face][i]*edge_width + inner_layer;	
 	}
 	//flip the orientation of the edges in the slice
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < edge_shifts.size(); i++) {
 		flip_edge(edge_shifts[i]);
 	}
 	

@@ -1,11 +1,11 @@
+#include "cube_base.h"
+#include "twist.h"
 #include <cmath>
 #include <iostream>
 #include <unordered_set>
 #include <cassert>
 #include <boost/functional/hash.hpp>
-
-#include "cube_base.h"
-#include "twist.h"
+#include <algorithm>
 
 using namespace cube;
 
@@ -24,4 +24,11 @@ void CubeBase::shift_pieces(uint8_t* pieces, const std::array<int, 4> indecies, 
 		pieces[indecies[(i+shifts)%4]] = pieces[indecies[i]];	
 	}
 	pieces[indecies[shifts]] = temp;
+}
+
+std::unique_ptr<uint8_t[]> CubeBase::copy_pieces(const uint8_t* array, const int size) {
+	std::unique_ptr<uint8_t[]> result = std::make_unique<uint8_t[]>(size);
+	std::copy(array, array+size, result.get());
+
+	return result;
 }
