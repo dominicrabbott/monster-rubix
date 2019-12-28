@@ -8,30 +8,30 @@
 #include <unordered_set>
 #include <functional>
 #include <memory>
-
+#include <array>
 #include "twist.h"
 #include "twist_sequence.h"
 #include "cube_state.h"
-#include "hash.h"
 #include "twist_provider.h"
+#include "cube.h"
 
 namespace cube {
-	class Cube;
 	class CubeCenters;
 }
 
 namespace ai {
 	class ThreeCubeSolver : public TwistProvider {
 		private:
-			typedef std::unordered_map<std::vector<uint8_t>, std::vector<cube::Twist>> LookupTable;
-			typedef std::function<std::vector<uint8_t>(const cube::Cube&)> Encoder;
+			typedef std::unordered_map<std::vector<bool>, std::vector<cube::Twist>> LookupTable;
+			typedef std::function<std::vector<bool>(const cube::Cube&)> Encoder;
 			typedef CubeState<cube::Cube> State;
+			static constexpr int stage_count = 4;
 
 			//lookup tables for each of the stages
-			LookupTable tables[4];
+			std::array<LookupTable, stage_count> tables;
 
 			//Encoder callables for each of the stages
-			Encoder encoders[4] = {
+			std::array<Encoder, stage_count> encoders = {
 				std::bind(&ThreeCubeSolver::encode_g1, this, std::placeholders::_1),
 				std::bind(&ThreeCubeSolver::encode_g2, this, std::placeholders::_1),
 				std::bind(&ThreeCubeSolver::encode_g3, this, std::placeholders::_1),
@@ -93,16 +93,20 @@ namespace ai {
 
 			//serializes the given lookup table to the given path 
 			void save_lookup_table(const LookupTable& table, std::string file_path);
+			
+			//helper function for creating encodings. Pushes the last n bits of 'data' to the end
+			//of 'encoding', where n is specified by the 'bits' paramater.
+			void build_encoding(std::vector<bool>& encoding, const uint8_t data, const int bits);
 
 			//Encoder functions for each stage. Each encoder function takes a cube object and
 			//encodes it into a vector of uint8_t. The encoding represents only what 
 			//is relevant to its corresponding stage, and nothing more.
-			std::vector<uint8_t> encode_g1(const cube::Cube& cube);
-			std::vector<uint8_t> encode_g2(const cube::Cube& cube);
+			std::vector<bool> encode_g1(const cube::Cube& cube);
+			std::vector<bool> encode_g2(const cube::Cube& cube);
 			//A modified G3 encoding us used that is easier to code. Credit to Stefan Pochmann:
 			//http://www.stefan-pochmann.info/spocc/other_stuff/tools/solver_thistlethwaite/solver_thistlethwaite.txt 	
-			std::vector<uint8_t> encode_g3(const cube::Cube& cube);
-			std::vector<uint8_t> encode_g4(const cube::Cube& cube);
+			std::vector<bool> encode_g3(const cube::Cube& cube);
+			std::vector<bool> encode_g4(const cube::Cube& cube);
 			
 			//creates a lookup table using the given encoder and using the given twist sequences
 			//to create the state-space	
@@ -111,7 +115,6 @@ namespace ai {
 			//notifies the twist listeners of the twists in the given twist sequence and performs those
 			//twists on the given cube object
 			void execute_partial_solution(const TwistSequence& twist_sequence, cube::Cube& cube);
-
 
 		public:
 			//constructor loads the lookup tables

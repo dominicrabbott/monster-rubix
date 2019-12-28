@@ -9,18 +9,13 @@
 #include "twist.h"
 
 namespace std {
-	template<typename T> 
-	struct hash<std::vector<T>> {
-		size_t operator()(const std::vector<T> vec) const {
-			return boost::hash_range(vec.begin(), vec.end());
-		}
-	};
 	template<typename T, size_t size> 
 	struct hash<std::array<T, size>> {
 		size_t operator()(const std::array<T, size> arr) const {
 			return boost::hash_range(arr.begin(), arr.end());
 		}
 	};
+
 	template<>
 	struct hash<cube::Twist> {
 		size_t operator()(const cube::Twist& twist) const {

@@ -1,4 +1,11 @@
-#include <deque>
+#include "three_cube_solver.h"
+#include "cube.h"
+#include "cube_centers.h"
+#include "face.h"
+#include "twist_utils.h"
+#include "search.h"
+#include "hash.h"
+#include <queue>
 #include <cmath>
 #include <algorithm>
 #include <iostream>
@@ -7,31 +14,24 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 
-#include "three_cube_solver.h"
-#include "cube.h"
-#include "cube_centers.h"
-#include "face.h"
-#include "twist_utils.h"
-#include "search.h"
-
 using namespace ai;
 ThreeCubeSolver::ThreeCubeSolver() {
 	using namespace cube;
-	std::string filenames[] = {
+	std::array<std::string, stage_count> filenames = {
 		"g1_table.bin",
 		"g2_table.bin",
 		"g3_table.bin",
 		"g4_table.bin",
 	};
 
-	std::unordered_set<cube::Face> restricted_faces[] {
+	std::array<std::unordered_set<cube::Face>, stage_count> restricted_faces = {{
 		{},
 		{Face::TOP, Face::BOTTOM},	
 		{Face::TOP, Face::BOTTOM, Face::FRONT, Face::BACK},
 		{Face::TOP, Face::BOTTOM, Face::FRONT, Face::BACK, Face::LEFT, Face::RIGHT},
-	};
+	}};
 
-	for (int stage = 0; stage < 4; stage++) {
+	for (int stage = 0; stage < stage_count; stage++) {
 		auto file_path = table_dir+filenames[stage];
 		if (!load_lookup_table(tables[stage], file_path)) {
 			tables[stage] = create_lookup_table(encoders[stage], generate_twist_sequences(restricted_faces[stage]));
@@ -209,7 +209,7 @@ std::vector<TwistSequence> ThreeCubeSolver::generate_twist_sequences(const std::
 	return twist_sequences;
 }
 
-bool ThreeCubeSolver::load_lookup_table(std::unordered_map<std::vector<uint8_t>, std::vector<cube::Twist>>& table, std::string file_path) {
+bool ThreeCubeSolver::load_lookup_table(std::unordered_map<std::vector<bool>, std::vector<cube::Twist>>& table, std::string file_path) {
 	if (!boost::filesystem::exists(table_dir)) {
 		boost::filesystem::create_directory(table_dir);
 	}
@@ -225,67 +225,43 @@ bool ThreeCubeSolver::load_lookup_table(std::unordered_map<std::vector<uint8_t>,
 	return false;
 }
 
-void ThreeCubeSolver::save_lookup_table(const std::unordered_map<std::vector<uint8_t>, std::vector<cube::Twist>>& table, std::string file_path) {
+void ThreeCubeSolver::save_lookup_table(const std::unordered_map<std::vector<bool>, std::vector<cube::Twist>>& table, std::string file_path) {
 	std::ofstream out_stream(file_path);
 	boost::archive::binary_oarchive saver(out_stream);
 	saver << table;
 }
 
-std::vector<uint8_t> ThreeCubeSolver::encode_g1(const cube::Cube& cube) {
-	std::vector<uint8_t> encoding;
-	uint8_t buffer = 0;
-	int buffer_index = 0;
-
-	for (int i = 0; i < cube.get_edge_count(); i++) {
-		buffer |= get_edge_orientation(cube, i) << buffer_index;
-		buffer_index++;
-
-		if (buffer_index == 8) {
-			encoding.push_back(buffer);
-			buffer = 0;
-			buffer_index = 0;	
-		}
+void ThreeCubeSolver::build_encoding(std::vector<bool>& encoding, const uint8_t data, const int bits) {
+	for (int i = 0; i < bits; i++) {
+		bool bit = (data >> i) & 1;
+		encoding.push_back(bit);
 	}
-	encoding.push_back(buffer);
+}
 
+std::vector<bool> ThreeCubeSolver::encode_g1(const cube::Cube& cube) {
+	std::vector<bool> encoding;
+	for (int edge = 0; edge < cube.get_edge_count(); edge++) {
+		build_encoding(encoding, get_edge_orientation(cube, edge), 1);
+	}
+	
 	return encoding;
 }
 
-std::vector<uint8_t> ThreeCubeSolver::encode_g2(const cube::Cube& cube) {
-	std::vector<uint8_t> encoding;
-	uint8_t buffer = 0;
-	int buffer_index = 0;
-
-	for (int i = 0; i < 8; i++) {
-		buffer |= cube.get_corner_orientation(i) << buffer_index;
-		buffer_index += 2;
-
-		if (buffer_index == 8) {
-			encoding.push_back(buffer);
-			buffer = 0;
-			buffer_index = 0;	
-		}	
+std::vector<bool> ThreeCubeSolver::encode_g2(const cube::Cube& cube) {
+	std::vector<bool> encoding;
+	for (int corner = 0; corner < cube.get_corner_count(); corner++) {
+		build_encoding(encoding, cube.get_corner_orientation(corner), 2);
 	}
-	for (int i = 0; i < cube.get_edge_count(); i++) {
-		buffer |= (edge_slices[get_edge_pos(cube, i)] == 1) << buffer_index;
-		buffer_index++;
-
-		if (buffer_index == 8) {
-			encoding.push_back(buffer);
-			buffer = 0;
-			buffer_index = 0;	
-		}
+	for (int edge = 0; edge < cube.get_edge_count(); edge++) {
+		build_encoding(encoding, edge_slices[get_edge_pos(cube, edge)]==1, 1);
 	}
-	encoding.push_back(buffer);
-
+	
 	return encoding;
 }
 
-std::vector<uint8_t> ThreeCubeSolver::encode_g3(const cube::Cube& cube) {
-	std::vector<uint8_t> encoding;
-	uint8_t buffer = 0;
-	int buffer_index = 0;
-
+std::vector<bool> ThreeCubeSolver::encode_g3(const cube::Cube& cube) {
+	std::vector<bool> encoding;
+	
 	static std::unordered_map<int, int> corner_pair_groups = {
 		{0, 0}, {2, 0}, 
 		{3, 1}, {1, 1}, 
@@ -293,70 +269,54 @@ std::vector<uint8_t> ThreeCubeSolver::encode_g3(const cube::Cube& cube) {
 		{7, 3}, {5, 3},
 	};
 
-	for (int i = 0; i < 8; i++) {
-		buffer |= corner_pair_groups[cube.get_corner_pos(i)] << buffer_index;
-		buffer_index += 2;
-		
-		if (buffer_index == 8) {
-			encoding.push_back(buffer);
-			buffer = 0;
-			buffer_index = 0;	
-		}	
+	for (int corner = 0; corner < cube.get_corner_count(); corner++) {
+		build_encoding(encoding, corner_pair_groups[cube.get_corner_pos(corner)], 2);
 	}
-
-	for (int i = 0; i < cube.get_edge_count(); i++) {
-		if (edge_slices[get_edge_pos(cube, i)] != 1) {
-			buffer |= edge_slices[get_edge_pos(cube, i)] << buffer_index;
-			buffer_index += 2;
-			
-			if (buffer_index == 8) {
-				encoding.push_back(buffer);
-				buffer = 0;
-				buffer_index = 0;
-			}
+	for (int edge = 0; edge < cube.get_edge_count(); edge++) {
+		if (edge_slices[get_edge_pos(cube, edge)] != 1) {
+			build_encoding(encoding, edge_slices[get_edge_pos(cube, edge)], 2);
 		}
-
-		
 	}
-	encoding.push_back(even_corner_parity(cube));
+	build_encoding(encoding, even_corner_parity(cube), 1);
+	
+	return encoding;
+}
+
+std::vector<bool> ThreeCubeSolver::encode_g4(const cube::Cube& cube) {
+	std::vector<bool> encoding;
+	for (int edge = 0; edge < cube.get_edge_count(); edge++) {
+		build_encoding(encoding, get_edge_pos(cube, edge), 4);
+	}
+	for (int corner = 0; corner < cube.get_corner_count(); corner++) {
+		build_encoding(encoding, cube.get_corner_pos(corner), 4);
+	}
 
 	return encoding;
 }
 
-std::vector<uint8_t> ThreeCubeSolver::encode_g4(const cube::Cube& cube) {
-	std::vector<uint8_t> encoding;
-	for (int i = 0; i < cube.get_edge_count(); i++) {
-		encoding.push_back(get_edge_pos(cube, i));	
-	}
-	for (int i = 0; i < cube.get_corner_count(); i++) {
-		encoding.push_back(cube.get_corner_pos(i));	
-	}
-
-	return encoding;
-}
-
-std::unordered_map<std::vector<uint8_t>, std::vector<cube::Twist>> ThreeCubeSolver::create_lookup_table(
-			const std::function<std::vector<uint8_t>(const cube::Cube&)> encoder, 
+std::unordered_map<std::vector<bool>, std::vector<cube::Twist>> ThreeCubeSolver::create_lookup_table(
+			const std::function<std::vector<bool>(const cube::Cube&)> encoder, 
 			const std::vector<TwistSequence> twist_sequences) {
 
-		std::deque<std::shared_ptr<State>> open {std::make_shared<State>(cube::Cube(3))};
+		std::queue<std::shared_ptr<State>> open;
+	       	open.push(std::make_shared<State>(cube::Cube(3)));
 		LookupTable table;
 		while (open.size() > 0) {
 			auto& curr_state = open.front();
-			for (const TwistSequence& twist_seq : twist_sequences) {
+			for (const auto& twist_seq : twist_sequences) {
 				cube::Cube child_cube(curr_state->cube);
 				for (const auto& twist : twist_seq) {
 					child_cube.rotate(twist);
 				}
 
 				auto child_ptr = std::make_shared<State>(curr_state, std::move(child_cube), twist_seq);
-				std::vector<uint8_t> child_encoding = encoder(child_cube);
+				auto child_encoding = encoder(child_cube);
 				if (!table.count(child_encoding)) {
 					table.insert(std::make_pair(child_encoding, get_twists(child_ptr.get())));
-					open.push_back(child_ptr);
+					open.push(child_ptr);
 				}	
 			}
-			open.pop_front();
+			open.pop();
 		}
 
 		return table;
