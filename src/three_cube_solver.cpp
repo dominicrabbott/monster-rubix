@@ -139,13 +139,16 @@ TwistSequence ThreeCubeSolver::solve_parity(const cube::Cube& cube) {
 			Twist(90, Face::TOP),
 			Twist(90, Face::TOP),
 			Twist(-90, Face::BACK),
-			Twist(90, Face::RIGHT, middle, false),
+			Twist(90, Face::RIGHT, middle),
+			Twist(-90, Face::RIGHT),
 			Twist(90, Face::BACK),
 			Twist(90, Face::BACK),
-			Twist(90, Face::LEFT, middle, false),
+			Twist(90, Face::LEFT, middle),
+			Twist(-90, Face::LEFT),
 			Twist(90, Face::BACK),
 			Twist(90, Face::BACK),
-			Twist(90, Face::RIGHT, middle, false),
+			Twist(90, Face::RIGHT, middle),
+			Twist(-90, Face::RIGHT),
 			Twist(-90, Face::BACK),
 			Twist(90, Face::BOTTOM),
 			Twist(90, Face::BOTTOM),
@@ -334,7 +337,7 @@ void ThreeCubeSolver::solve(const cube::Cube& cube, const cube::CubeCenters& cen
 
 	execute_partial_solution(orient_cube(centers), curr_state);
 	execute_partial_solution(solve_parity(curr_state), curr_state);
-	for (int stage = 0; stage < 4; stage++) {
+	for (int stage = 0; stage < stage_count; stage++) {
 		execute_partial_solution(tables[stage][encoders[stage](curr_state)], curr_state);
 		std::cout << "Stage " << stage << " complete\n";
 	}
