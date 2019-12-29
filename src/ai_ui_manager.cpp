@@ -1,9 +1,7 @@
 #include "ai_ui_manager.h"
 #include "twist.h"
 #include "face.h"
-#include "center_solver.h"
-#include "edge_solver.h"
-#include "three_cube_solver.h"
+#include "cube_solver.h"
 #include <cstdlib>
 #include <memory>
 #include <boost/optional.hpp>
@@ -46,15 +44,7 @@ void AIUIManager::setup() {
 }
 
 void AIUIManager::solve() {
-	ai::CenterSolver center_solver;
-	center_solver.add_twist_listener(this);
-	center_solver.solve(sym_cube_centers);
-
-	ai::EdgeSolver edge_solver;
-	edge_solver.add_twist_listener(this);
-	edge_solver.solve(sym_cube);
-	
-	ai::ThreeCubeSolver three_solver;
-	three_solver.add_twist_listener(this);
-	three_solver.solve(sym_cube, sym_cube_centers);
+	ai::CubeSolver solver;
+	solver.add_twist_listener(this);
+	solver.solve(sym_cube, sym_cube_centers);
 }
