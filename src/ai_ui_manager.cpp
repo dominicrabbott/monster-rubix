@@ -20,17 +20,29 @@ cube::Twist AIUIManager::random_twist() {
 	return cube::Twist(degrees, face, layer, wide_turn);
 }
 
+bool AIUIManager::keyPressed(const OgreBites::KeyboardEvent& event) {
+	int ENTER = 13;
+	if (event.keysym.sym == ENTER && !start_solution) {
+		cube -> set_frames_per_rotation(3);
+		for (const auto& twist : solution) {
+			cube -> rotate(twist);
+		}
+		start_solution = true;
+	}
+
+	return true;
+}
+
 void AIUIManager::setup() {
 	UIManager::setup();
 	std::srand(std::time(nullptr));
-
+	cube -> set_frames_per_rotation(9);
 	for (int i = 0; i < 100; i++) {
 		cube::Twist twist = random_twist();
 		sym_cube_centers.rotate(twist);
 		sym_cube.rotate(twist);
 		cube -> rotate(twist);
 	}
-	cube->set_frames_per_rotation(3);
 }
 
 void AIUIManager::solve() {
