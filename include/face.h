@@ -3,12 +3,11 @@
 
 #include <array>
 #include <unordered_map>
+#include <iostream>
 	
-class ostream;
-
 namespace cube {
 
-	enum class Face : int {LEFT = 0, TOP = 1, BACK = 2, BOTTOM = 3, FRONT = 4, RIGHT = 5};
+	enum class Face {LEFT = 0, TOP = 1, BACK = 2, BOTTOM = 3, FRONT = 4, RIGHT = 5};
 
 	const std::array<Face,6> ALL_FACES = {
 		Face::RIGHT,	
