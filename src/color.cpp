@@ -1,4 +1,3 @@
-#include <iostream>
 #include "color.h"
 
 using namespace ui;

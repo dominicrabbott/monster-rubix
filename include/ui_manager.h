@@ -2,7 +2,6 @@
 #define UI_MANAGER_H
 
 #include <memory>
-
 #include "cube_display.h"
 #include "OgreApplicationContext.h"
 #include "OgreInput.h"
@@ -12,7 +11,7 @@ namespace ui {
 	
 	class UIManager : public OgreBites::ApplicationContext, public OgreBites::InputListener {
 		public:
-			UIManager(const int size) : size(size), OgreBites::ApplicationContext("RubixII") {};
+			UIManager(const int size) : size(size), OgreBites::ApplicationContext("MonsterRubix") {};
 		
 		protected:
 			//pointer to CubeDisplay object that draws the cube

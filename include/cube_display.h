@@ -1,17 +1,16 @@
 #ifndef CUBE_DISPLAY_H
 #define CUBE_DISPLAY_H
 
-#include <vector>
-#include <deque>
-#include <unordered_map>
-#include <atomic>
-#include <cassert>
-
 #include "Ogre.h"
 #include "OgreInput.h"
 #include "face.h"
 #include "twist.h"
 #include "color.h"
+#include <vector>
+#include <queue>
+#include <unordered_map>
+#include <atomic>
+#include <cassert>
 
 class mutex;
 
@@ -46,7 +45,7 @@ namespace ui {
 			const int piece_size = 100;
 
 			//rotations that are to be made to the cube
-			std::deque<Rotation> pending_rotations;
+			std::queue<Rotation> pending_rotations;
 
 			//Each vector in this set makes up one axis of the cube.
 			//Each axis is made up of several SceneNodes in a line, each located at the center of
@@ -79,6 +78,25 @@ namespace ui {
 			//transfer a SceneNode from its current parent to another SceneNode
 			void adopt_scene_node(Ogre::SceneNode* child, Ogre::SceneNode* new_parent);
 
+			//Helper functions for maintaining the position of the pieces within the cube as they
+			//are moved around the various layers of the cube
+			//
+			//
+			//transposes the given layer. Pointers to the nodes to be transposed are accepted as arguments
+			void transpose_layer(const std::vector<std::vector<Ogre::SceneNode**>>& layer);
+			
+			//reverses the rows in the given layer. Pointers to the elements to be 
+			//reversed are accepted as arguments
+			void reverse_layer_rows(const std::vector<std::vector<Ogre::SceneNode**>>& matrix);
+			
+			//performs a rotation to the given layer. Pointers to the nodes that are to be
+			//rotated are accepted as arguments
+			void rotate_layer(const std::vector<std::vector<Ogre::SceneNode**>>& layer, const int degrees);
+
+			//returns a matrix that contains pointers to the elements that make up the specified 
+			//layer in the given cube
+			std::vector<std::vector<Ogre::SceneNode**>> find_layer(const cube::Face face, const int layer);
+
 		public:
 			//creates a CubeDisplay object that starts by displaying an unscrambled cube of dimensions 
 			//size x size x size with the given SceneManager pointer. The displayed cube can then be 
@@ -87,6 +105,7 @@ namespace ui {
 
 			//performs the given rotation
 			void rotate(const cube::Twist &move);
+			
 
 			void set_frames_per_rotation(const int frames) {
 				assert(90%frames == 0 && "90 must be divisible by the number of frames to rotate");

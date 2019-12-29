@@ -1,7 +1,7 @@
 #ifndef COLOR_H
 #define COLOR_H
 
-class ostream;
+#include <iostream>
 
 namespace ui {
 	enum class Color {GREEN, BLUE, YELLOW, WHITE, RED, ORANGE, BLACK};

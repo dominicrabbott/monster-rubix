@@ -1,14 +1,13 @@
-#include <cstdlib>
-#include <memory>
-#include <boost/optional.hpp>
-#include <iostream>
-
 #include "ai_ui_manager.h"
 #include "twist.h"
 #include "face.h"
 #include "center_solver.h"
 #include "edge_solver.h"
 #include "three_cube_solver.h"
+#include <cstdlib>
+#include <memory>
+#include <boost/optional.hpp>
+#include <iostream>
 
 using namespace ui;
 

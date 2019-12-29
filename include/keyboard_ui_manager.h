@@ -4,7 +4,6 @@
 #include <vector>
 #include <regex>
 #include <stack>
-
 #include "ui_manager.h"
 #include "twist.h"
 

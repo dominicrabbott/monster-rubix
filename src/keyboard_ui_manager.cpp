@@ -1,19 +1,17 @@
+#include "keyboard_ui_manager.h"
+#include "face.h"
 #include <string>
 #include <iostream>
 #include <unordered_map>
-
-#include "keyboard_ui_manager.h"
-#include "face.h"
 
 using namespace ui;
 using namespace Ogre;
 
 bool KeyboardUIManager::keyPressed(const OgreBites::KeyboardEvent& event) {
 	UIManager::keyPressed(event);
-
+	
 	int ENTER = 13;
 	int TAB = 9;
-
 	if (event.keysym.sym == ENTER) {
 		twist();
 		keys_pressed = "";	
@@ -29,10 +27,10 @@ bool KeyboardUIManager::keyPressed(const OgreBites::KeyboardEvent& event) {
 	}
 
 	else if (event.keysym.sym == 'u') {
-		if (prev_moves.size() > 0) {
-			cube::Twist& move = prev_moves.top();
-			cube -> rotate(cube::Twist(-move.degrees, move.face, move.layer, move.wide_turn));
+		if (!prev_moves.empty()) {
+			auto move = prev_moves.top();
 			prev_moves.pop();
+			cube -> rotate(cube::Twist(-move.degrees, move.face, move.layer, move.wide_turn));
 		}
 	}
 
@@ -63,7 +61,7 @@ bool KeyboardUIManager::keyReleased(const OgreBites::KeyboardEvent& event) {
 
 
 void KeyboardUIManager::twist() {
-	static std::string faces = "([RrLlDdTtFfBb])";
+	static std::string faces("([RrLlDdTtFfBb])");
 	static std::regex form1(faces);
 	static std::regex form2("(\\d+)" + faces + "(w?)");
 
@@ -102,13 +100,13 @@ void KeyboardUIManager::twist() {
 			{'B', cube::Face::BACK},	
 		};
 
-		if (notation_map.count(face_char) == 0) {
-			degrees = -90;
-			face = notation_map[std::toupper(face_char)];
-		}
-		else {
+		if (notation_map.count(face_char)) {
 			degrees = 90;
 			face = notation_map[face_char];	
+		}
+		else {
+			degrees = -90;
+			face = notation_map[std::toupper(face_char)];
 		}
 
 		layer = std::stoi(layer_str) - 1;
