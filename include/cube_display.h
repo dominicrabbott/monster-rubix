@@ -27,8 +27,9 @@ namespace ui {
 				int remaining_degrees;
 				int from_layer;
 				int to_layer;
+				int frames_per_rotation;
 
-				Rotation(const cube::Twist& move, const int cube_size);
+				Rotation(const cube::Twist& move, const int cube_size, const int frames_per_rotation);
 			};
 
 			//number of degrees to rotate each frame

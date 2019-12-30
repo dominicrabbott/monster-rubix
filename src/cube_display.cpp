@@ -11,7 +11,8 @@ using namespace ui;
 using namespace Ogre;
 
 
-CubeDisplay::Rotation::Rotation(const cube::Twist& move, const int cube_size) {
+CubeDisplay::Rotation::Rotation(const cube::Twist& move, const int cube_size, const int frames_per_rotation) : 
+	frames_per_rotation(frames_per_rotation) {
 	static std::unordered_map<cube::Face, cube::Face> opposing_faces = {
 		{cube::Face::LEFT, cube::Face::RIGHT},
 		{cube::Face::BOTTOM, cube::Face::TOP},
@@ -41,19 +42,13 @@ CubeDisplay::CubeDisplay(const int size, SceneManager* scene_mgr) : scene_mgr(sc
 
 void CubeDisplay::rotate(const cube::Twist& move) {
 	std::unique_lock<std::mutex> lock(mex);
-	pending_rotations.push(Rotation(move, cube.size()));
+	pending_rotations.push(Rotation(move, cube.size(), frames_per_rotation));
 }
 
 void CubeDisplay::frameRendered(const Ogre::FrameEvent& event)  {
-	mex.lock();
-	bool empty = pending_rotations.empty();
-	mex.unlock();
-
-	if (!empty) {
-		mex.lock();
+	std::unique_lock<std::mutex>(mex);
+	if (!pending_rotations.empty()) {
 		auto& curr_rot = pending_rotations.front();
-		mex.unlock();
-
 		if (curr_rot.remaining_degrees == curr_rot.total_degrees) {
 			for (int i = curr_rot.from_layer; i <= curr_rot.to_layer; i++) {
 				auto layer = find_layer(curr_rot.axis, i);
@@ -64,7 +59,7 @@ void CubeDisplay::frameRendered(const Ogre::FrameEvent& event)  {
 				}
 			}
 		}
-		int degrees_per_frame = curr_rot.total_degrees/frames_per_rotation.load();
+		int degrees_per_frame = curr_rot.total_degrees/curr_rot.frames_per_rotation;
 		for (int i = curr_rot.from_layer; i <= curr_rot.to_layer; i++) {
 			skeleton[curr_rot.axis][i] -> roll(Degree(degrees_per_frame));
 		}
@@ -73,14 +68,10 @@ void CubeDisplay::frameRendered(const Ogre::FrameEvent& event)  {
 			for (int i = curr_rot.from_layer; i <= curr_rot.to_layer; i++) {
 				rotate_layer(find_layer(curr_rot.axis, i), curr_rot.total_degrees);
 			}
-
-			mex.lock();
 			pending_rotations.pop();
-			mex.unlock();
 		}
 	}
-}
-
+} 
 void CubeDisplay::create_cube(const int size) {
 	create_skeleton(size);
 
