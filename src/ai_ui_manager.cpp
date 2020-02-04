@@ -37,7 +37,6 @@ void AIUIManager::setup() {
 	cube -> set_frames_per_rotation(9);
 	for (int i = 0; i < 100; i++) {
 		cube::Twist twist = random_twist();
-		sym_cube_centers.rotate(twist);
 		sym_cube.rotate(twist);
 		cube -> rotate(twist);
 	}
@@ -46,5 +45,5 @@ void AIUIManager::setup() {
 void AIUIManager::solve() {
 	ai::CubeSolver solver;
 	solver.add_twist_listener(this);
-	solver.solve(sym_cube, sym_cube_centers);
+	solver.solve(sym_cube);
 }

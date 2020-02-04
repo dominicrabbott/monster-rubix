@@ -1,6 +1,7 @@
 #include "three_cube_solver.h"
 #include "cube.h"
 #include "cube_centers.h"
+#include "combined_cube.h"
 #include "face.h"
 #include "twist_utils.h"
 #include "search.h"
@@ -325,20 +326,20 @@ std::unordered_map<std::vector<bool>, std::vector<cube::Twist>> ThreeCubeSolver:
 		return table;
 }
 
-void ThreeCubeSolver::execute_partial_solution(const TwistSequence& twist_sequence, cube::Cube& cube) {
+void ThreeCubeSolver::execute_partial_solution(const TwistSequence& twist_sequence, cube::CombinedCube& comb_cube) {
 	notify_listeners(twist_sequence);
 	for (const auto& twist : twist_sequence) {
-		cube.rotate(twist);	
+		comb_cube.rotate(twist);	
 	}
 }
 
-void ThreeCubeSolver::solve(const cube::Cube& cube, const cube::CubeCenters& centers) {
-	cube::Cube curr_state(cube);
+void ThreeCubeSolver::solve(const cube::CombinedCube& comb_cube) {
+	cube::CombinedCube curr_state(comb_cube);
 
-	execute_partial_solution(orient_cube(centers), curr_state);
-	execute_partial_solution(solve_parity(curr_state), curr_state);
+	execute_partial_solution(orient_cube(comb_cube.get_cube_centers()), curr_state);
+	execute_partial_solution(solve_parity(curr_state.get_cube()), curr_state);
 	for (int stage = 0; stage < stage_count; stage++) {
-		execute_partial_solution(tables[stage][encoders[stage](curr_state)], curr_state);
+		execute_partial_solution(tables[stage][encoders[stage](curr_state.get_cube())], curr_state);
 		std::cout << "Stage " << stage << " complete\n";
 	}
 }

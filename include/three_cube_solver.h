@@ -16,6 +16,7 @@
 #include "cube.h"
 
 namespace cube {
+	class CombinedCube;
 	class CubeCenters;
 }
 
@@ -114,7 +115,7 @@ namespace ai {
 
 			//notifies the twist listeners of the twists in the given twist sequence and performs those
 			//twists on the given cube object
-			void execute_partial_solution(const TwistSequence& twist_sequence, cube::Cube& cube);
+			void execute_partial_solution(const TwistSequence& twist_sequence, cube::CombinedCube& comb_cube);
 
 		public:
 			//constructor loads the lookup tables
@@ -122,7 +123,7 @@ namespace ai {
 
 			//solves the given cube object and returns a vector that contains the twists that were made
 			//to solve the cube
-			void solve(const cube::Cube& cube, const cube::CubeCenters& centers);
+			void solve(const cube::CombinedCube& comb_cube);
 	};
 }
 
