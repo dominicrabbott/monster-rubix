@@ -83,6 +83,8 @@ void CubeDisplay::create_cube(const int size) {
 			cube[x].push_back(std::vector<SceneNode*>());
 			for (int z = 0; z < size; z++) {
 				auto* cube_node = create_piece(create_piece_colors(Vector3(x,y,z), size));
+				cube_node -> getParentSceneNode() -> removeChild(cube_node);
+				root_node -> addChild(cube_node);
 				cube_node -> setPosition(x*piece_size-translation, y*piece_size-translation, z*piece_size-translation);
 
 				cube[x][y].push_back(cube_node);
@@ -131,7 +133,7 @@ void CubeDisplay::adopt_scene_node(SceneNode* child, SceneNode* new_parent) {
 }
 
 void CubeDisplay::create_skeleton(const int size) {
-	auto* root_node = scene_mgr -> getRootSceneNode();
+	root_node = scene_mgr -> getRootSceneNode() -> createChildSceneNode();
 	float axis_length = size-1;
 	
 	for (float f = -axis_length/2; f <= axis_length/2; f++) {

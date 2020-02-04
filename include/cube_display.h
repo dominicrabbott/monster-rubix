@@ -32,6 +32,9 @@ namespace ui {
 				Rotation(const cube::Twist& move, const int cube_size, const int frames_per_rotation);
 			};
 
+			//root node of the cube that all nodes are positioned relative to
+			Ogre::SceneNode* root_node;
+
 			//number of degrees to rotate each frame
 			std::atomic<int> frames_per_rotation;
 
@@ -111,6 +114,10 @@ namespace ui {
 			void set_frames_per_rotation(const int frames) {
 				assert(90%frames == 0 && "90 must be divisible by the number of frames to rotate");
 				frames_per_rotation = frames;
+			}
+
+			Ogre::SceneNode* get_root_node() const {
+				return root_node;
 			}
 	
 	};
