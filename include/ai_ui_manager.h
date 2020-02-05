@@ -10,7 +10,7 @@
 namespace ui{
 	class AIUIManager : public UIManager, public ai::TwistListener {
 		private:
-			//returns true if the ai thread is done finding a solution
+			//returns true if the user has started the solution
 			std::atomic<bool> start_solution;
 
 			//symbolic representation of the cube
@@ -40,8 +40,7 @@ namespace ui{
 					solution.push_back(twist);
 				}
 			}
-
-			//solves the cube
+			
 			void solve();	
 	};
 }
