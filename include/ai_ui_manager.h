@@ -13,9 +13,6 @@ namespace ui{
 			//returns true if the ai thread is done finding a solution
 			std::atomic<bool> start_solution;
 
-			//returns a random twist object
-			cube::Twist random_twist();
-
 			//symbolic representation of the cube
 			cube::CombinedCube sym_cube;
 

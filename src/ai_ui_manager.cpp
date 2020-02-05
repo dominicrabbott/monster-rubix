@@ -2,21 +2,13 @@
 #include "twist.h"
 #include "face.h"
 #include "cube_solver.h"
+#include "scramble_generator.h"
 #include <cstdlib>
 #include <memory>
 #include <boost/optional.hpp>
 #include <iostream>
 
 using namespace ui;
-
-cube::Twist AIUIManager::random_twist() {
-	int degrees = std::rand() % 2 ? 90 : -90;
-	cube::Face face = cube::ALL_FACES[std::rand() % 6];
-	int layer = std::rand() % size/2;
-	bool wide_turn = std::rand() % 2;
-
-	return cube::Twist(degrees, face, layer, wide_turn);
-}
 
 bool AIUIManager::keyPressed(const OgreBites::KeyboardEvent& event) {
 	int ENTER = 13;
@@ -33,10 +25,8 @@ bool AIUIManager::keyPressed(const OgreBites::KeyboardEvent& event) {
 
 void AIUIManager::setup() {
 	UIManager::setup();
-	std::srand(std::time(nullptr));
 	cube -> set_frames_per_rotation(9);
-	for (int i = 0; i < 100; i++) {
-		cube::Twist twist = random_twist();
+	for (const auto& twist : cube::scramble_generator::generate_scramble(100, sym_cube.get_cube().get_size())) {
 		sym_cube.rotate(twist);
 		cube -> rotate(twist);
 	}
