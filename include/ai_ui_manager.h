@@ -32,7 +32,6 @@ namespace ui{
 			void setup() override;
 
 			void twist(const cube::Twist& twist) override {
-				sym_cube.rotate(twist);
 				if (start_solution) {
 					cube -> rotate(twist);	
 				}

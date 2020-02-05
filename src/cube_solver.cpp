@@ -18,5 +18,5 @@ void CubeSolver::solve(const cube::CombinedCube& comb_cube) {
 	
 	ThreeCubeSolver three_solver;
 	three_solver.add_twist_listener(this);
-	three_solver.solve(comb_cube);
+	three_solver.solve(this->comb_cube.get());
 }
