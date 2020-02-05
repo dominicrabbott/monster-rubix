@@ -26,7 +26,7 @@ bool AIUIManager::keyPressed(const OgreBites::KeyboardEvent& event) {
 void AIUIManager::setup() {
 	UIManager::setup();
 	cube -> set_frames_per_rotation(9);
-	for (const auto& twist : cube::scramble_generator::generate_scramble(100, sym_cube.get_cube().get_size())) {
+	for (const auto& twist : cube::scramble_generator::generate_scramble(100, sym_cube.get_size())) {
 		sym_cube.rotate(twist);
 		cube -> rotate(twist);
 	}

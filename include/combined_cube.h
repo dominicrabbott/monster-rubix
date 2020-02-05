@@ -37,6 +37,10 @@ namespace cube {
 				cube_centers.rotate(twist);	
 			}
 
+			int get_size() {
+				return cube.get_size();
+			}
+
 			bool operator==(const CombinedCube& comb_cube) const {
 				return comb_cube.get_cube()==cube && comb_cube.get_cube_centers()==cube_centers;	
 			}
