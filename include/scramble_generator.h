@@ -8,9 +8,9 @@
 
 namespace cube {
 	namespace scramble_generator {
-		inline std::vector<cube::Twist> generate_scramble(const int scramble_length, const int cube_size) {
+		inline std::vector<cube::Twist> generate_scramble(const int scramble_length, const int cube_size, const int seed=std::time(nullptr)) {
 			std::vector<cube::Twist> scramble_twists;
-			std::srand(std::time(nullptr));
+			std::srand(seed);
 			for (int i = 0; i < scramble_length; i++) {
 				int degrees = std::rand()%2 ? 90 : -90;
 				Face face = cube::ALL_FACES[std::rand()%6];
