@@ -37,7 +37,7 @@ void MultiCubeUI::setup() {
 		auto cube_ptr = std::make_unique<ui::CubeDisplay>(sym_cubes[cube_index].get_size(), scene_mgr);
 		addInputListener(cube_ptr.get());
 		cube_ptr -> get_root_node() -> setPosition(cube_position, 0, 0);
-		for (const auto& twst : cube::scramble_generator::generate_scramble(100, sym_cubes[cube_index].get_size(), std::time(nullptr)+cube_index)) {
+		for (const auto& twst : cube::scramble_generator::generate_scramble(50, sym_cubes[cube_index].get_size(), std::time(nullptr)+cube_index)) {
 			cube_ptr -> rotate(twst);
 			sym_cubes[cube_index].rotate(twst);
 		}
