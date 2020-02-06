@@ -30,20 +30,24 @@ void MultiCubeUI::setup() {
 	auto* cube_root = cube -> get_root_node();
 	cube_root -> getParentSceneNode() -> removeChild(cube_root);
 
-	camera_man -> getCamera() -> setPosition(0,0,5000);
 	
-	int cube_spacing = 800;
+	int cube_spacing = 200;
+	int cube_position = 0;
 	for (int cube_index = 0; cube_index < sym_cubes.size(); cube_index++) {
-		auto cube = std::make_unique<ui::CubeDisplay>(sym_cubes[cube_index].get_size(), scene_mgr);
-		addInputListener(cube.get());
-		int cube_position = 800*cube_index - sym_cubes.size()/2*cube_spacing;
-		cube -> get_root_node() -> setPosition(cube_position, 0, 0);
+		auto cube_ptr = std::make_unique<ui::CubeDisplay>(sym_cubes[cube_index].get_size(), scene_mgr);
+		addInputListener(cube_ptr.get());
+		cube_ptr -> get_root_node() -> setPosition(cube_position, 0, 0);
 		for (const auto& twst : cube::scramble_generator::generate_scramble(100, sym_cubes[cube_index].get_size(), std::time(nullptr)+cube_index)) {
-			cube -> rotate(twst);
+			cube_ptr -> rotate(twst);
 			sym_cubes[cube_index].rotate(twst);
 		}
-		cube_displays.push_back(std::move(cube));
+		int layer_width = 100;
+		cube_position += sym_cubes[cube_index].get_size()*layer_width + cube_spacing;
+		cube_displays.push_back(std::move(cube_ptr));
 	}
+	auto* central_node = cube_displays[cube_displays.size()/2] -> get_root_node();
+	camera_man -> getCamera() -> setPosition(central_node -> getPosition().x, 0, 700*sym_cubes.size());
+	camera_man -> setTarget(central_node);
 }
 
 bool MultiCubeUI::keyPressed(const OgreBites::KeyboardEvent& event) {
