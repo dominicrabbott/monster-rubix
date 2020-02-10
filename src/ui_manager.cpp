@@ -11,7 +11,7 @@ void UIManager::setup() {
 	OgreBites::ApplicationContext::setup();
 	addInputListener(this);
 
-	auto* scene_mgr = getRoot() -> createSceneManager();
+	scene_mgr = getRoot() -> createSceneManager();
 	scene_mgr -> setAmbientLight(ColourValue(1,1,1));
 
 	auto* cam = scene_mgr -> createCamera("main_cam");
@@ -25,9 +25,6 @@ void UIManager::setup() {
 
 	auto* viewport = getRenderWindow() -> addViewport(cam);
 	viewport -> setBackgroundColour(ColourValue(.95,.95,.85));
-
-	cube = std::make_unique<CubeDisplay>(size, scene_mgr);
-	addInputListener(cube.get());
 }
 
 bool UIManager::keyPressed(const OgreBites::KeyboardEvent &event) {

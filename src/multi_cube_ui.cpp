@@ -17,7 +17,7 @@ void MultiCubeUI::SolutionExecutor::start_solution() {
 	}
 }
 
-MultiCubeUI::MultiCubeUI(const std::vector<int>& cube_sizes) : UIManager(1) {
+MultiCubeUI::MultiCubeUI(const std::vector<int>& cube_sizes) {
 	for (const int size : cube_sizes) {
 		sym_cubes.push_back(cube::CombinedCube(size));
 	}
@@ -25,11 +25,6 @@ MultiCubeUI::MultiCubeUI(const std::vector<int>& cube_sizes) : UIManager(1) {
 
 void MultiCubeUI::setup() {
 	UIManager::setup();
-	auto* scene_mgr = getRoot() -> getSceneManagers().begin() -> second;
-	
-	auto* cube_root = cube -> get_root_node();
-	cube_root -> getParentSceneNode() -> removeChild(cube_root);
-
 	
 	int cube_spacing = 200;
 	int cube_position = 0;

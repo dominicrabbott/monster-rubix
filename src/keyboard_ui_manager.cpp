@@ -110,7 +110,8 @@ void KeyboardUIManager::twist() {
 		}
 
 		layer = std::stoi(layer_str) - 1;
-
+		
+		int size=2;
 		if (layer < size) {
 			cube::Twist move(degrees, face, layer, wide_turn);
 
@@ -127,4 +128,10 @@ int KeyboardUIManager::ask_size() {
 	std::cin >> size;
 
 	return size;
+}
+
+void KeyboardUIManager::setup() {
+	UIManager::setup();
+	cube = std::make_unique<CubeDisplay>(size, scene_mgr);
+	addInputListener(cube.get());
 }

@@ -13,8 +13,13 @@ namespace ui {
 
 	class KeyboardUIManager : public UIManager {
 		private:
+			std::unique_ptr<CubeDisplay> cube;
+
 			//string made from the keys entered by the user
 			std::string keys_pressed;
+
+			//the size of the cube being manipulated
+			int size;
 
 			//used to track whether shift is pressed
 			bool shift_pressed = false;
@@ -35,8 +40,10 @@ namespace ui {
 
 			//queries the size of the cube from the user
 			int ask_size();
+
+			void setup() override;
 		public:
-			KeyboardUIManager() : UIManager(ask_size()) {};
+			KeyboardUIManager() : size(ask_size()) {};
 	};
 }
 
