@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <cctype>
 #include "multi_cube_ui.h"
+#include "keyboard_ui_manager.h"
 
 void start_ui(const std::vector<int>& cube_sizes) {
 	ui::MultiCubeUI ui(cube_sizes);
@@ -26,23 +27,31 @@ bool is_number(char* str) {
 
 int main(int argc, char* argv[]) {
 	std::vector<int> cube_sizes;
-	std::string usage_message = "Usage : MonsterRubix [cube 1 size, cube 2 size, ...] \n";
-	
-	for (int arg_index = 1; arg_index < argc; arg_index++) {
-		if (!is_number(argv[arg_index])) {
-			std::cout << "All arguments must be numbers\n" << usage_message;
+	std::string usage_message = "Usage : MonsterRubix [keyboard | <cube 1 size>, <cube 2 size>, ...] \n";
+
+	if (argc == 2 && !strcmp("keyboard", argv[1])) {
+		ui::KeyboardUIManager ui;
+		ui.initApp();
+		ui.getRoot() -> startRendering();
+		ui.closeApp();
+	}
+	else {
+		for (int arg_index = 1; arg_index < argc; arg_index++) {
+			if (!is_number(argv[arg_index])) {
+				std::cout << "All arguments must be numbers\n" << usage_message;
+				return 1;
+			}
+			int cube_size = std::atoi(argv[arg_index]);
+			if (cube_size < 3 || cube_size > 9) {
+				std::cout << "Please provide sizes greater than 3 and less than 10\n" << usage_message;
+				return 1;
+			}
+			cube_sizes.push_back(cube_size);
+		}
+		if (cube_sizes.size() == 0) {
+			std::cout << "Please provide at least one cube size\n" << usage_message;
 			return 1;
 		}
-		int cube_size = std::atoi(argv[arg_index]);
-		if (cube_size < 3 || cube_size > 9) {
-			std::cout << "Please provide sizes greater than 3 and less than 10\n" << usage_message;
-			return 1;
-		}
-		cube_sizes.push_back(cube_size);
+		start_ui(cube_sizes);
 	}
-	if (cube_sizes.size() == 0) {
-		std::cout << "Please provide at least one cube size\n" << usage_message;
-		return 1;
-	}
-	start_ui(cube_sizes);
 }
