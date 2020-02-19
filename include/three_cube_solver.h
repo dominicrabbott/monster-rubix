@@ -1,15 +1,18 @@
 #ifndef THREE_CUBE_SOLVER
 #define THREE_CUBE_SOLVER
 
-#include <boost/serialization/vector.hpp>
+#include <boost/bimap.hpp>
+#include <boost/iostreams/device/mapped_file.hpp>
+#include <boost/bimap/unordered_set_of.hpp>
+#include <boost/filesystem.hpp>
 #include <algorithm>
 #include <string>
-#include <boost/serialization/unordered_map.hpp>
 #include <unordered_set>
 #include <functional>
 #include <memory>
 #include <array>
 #include "twist.h"
+#include "hash.h"
 #include "twist_sequence.h"
 #include "cube_state.h"
 #include "twist_provider.h"
@@ -26,10 +29,22 @@ namespace ai {
 			typedef std::unordered_map<std::vector<bool>, std::vector<cube::Twist>> LookupTable;
 			typedef std::function<std::vector<bool>(const cube::Cube&)> Encoder;
 			typedef CubeState<cube::Cube> State;
+			typedef boost::bimap<boost::bimaps::unordered_set_of<cube::Twist, std::hash<cube::Twist>>, char> TwistEncodingMap;
 			static constexpr int stage_count = 4;
+			
+			const static ptrdiff_t cube_encoding_length = 11;
+			const static ptrdiff_t twists_encoding_length = 30;
+			const static ptrdiff_t table_entry_length = cube_encoding_length+twists_encoding_length;
 
-			//lookup tables for each of the stages
-			std::array<LookupTable, stage_count> tables;
+			//maps the 90 and -90 degree rotations of every face to an 8-bit integer encoding
+			TwistEncodingMap twist_mappings;
+
+			std::array<std::string, stage_count> filenames = {
+				"g1_table.bin",
+				"g2_table.bin",
+				"g3_table.bin",
+				"g4_table.bin",
+			};
 
 			//Encoder callables for each of the stages
 			std::array<Encoder, stage_count> encoders = {
@@ -44,10 +59,10 @@ namespace ai {
 				{4,0}, {5,0}, {6,0}, {7,0},
 				{0,1}, {2,1}, {8,1}, {10,1},
 				{3,2}, {1,2}, {11,2}, {9,2},
-			};
+			}; 
 
 			//directory the lookup tables are stored to
-			std::string table_dir = "tables/";
+			boost::filesystem::path table_dir;
 
 			//returns the edge position of the specified edge on a reduced
 			//cube
@@ -60,6 +75,9 @@ namespace ai {
 			int get_edge_orientation(const cube::Cube& cube, const int edge) {
 				return cube.get_edge_orientation(edge*cube.get_edge_width());	
 			}
+
+			//used to populate the twist_mappings member variable
+			TwistEncodingMap create_twist_mappings();
 
 			//orients the cube so it is in its 'natural' orientation, ie each center is
 			//in the position it was before the cube was scrambled
@@ -79,18 +97,13 @@ namespace ai {
 			TwistSequence solve_parity(const cube::Cube& cube);
 			
 			//returns a vector holding the twists needed to transition from the given state
-			//to the root state, which is the goal state of a stage
+			//to the root state
 			std::vector<cube::Twist> get_twists(const State* state);
 
-			//returns a vector that contains the twist sequences that can be made at a stage. If a face
+			//creates a vector that contains the twist sequences that can be made at a stage. If a face
 			//exists in the restricted_faces parameter, only 180 degree turns of that face are allowed. Otherwise, 90 and -90 degree
 			//turns are allowed
 			std::vector<TwistSequence> generate_twist_sequences(const std::unordered_set<cube::Face>& restricted_faces);
-
-			//attemps to load a lookup table located at the given path. Returns true and populates the given lookup table
-			//with the loaded data if the load was successful. If the load was not successful because the file doesn't exist yet,
-			//this function returns false.
-			bool load_lookup_table(LookupTable& table, std::string file_path);
 
 			//serializes the given lookup table to the given path 
 			void save_lookup_table(const LookupTable& table, std::string file_path);
@@ -108,21 +121,29 @@ namespace ai {
 			//http://www.stefan-pochmann.info/spocc/other_stuff/tools/solver_thistlethwaite/solver_thistlethwaite.txt 	
 			std::vector<bool> encode_g3(const cube::Cube& cube);
 			std::vector<bool> encode_g4(const cube::Cube& cube);
+
+			//converts an encoding to a form that makes saving the encoding
+			//to disk easier
+			std::vector<char> convert_encoding(const std::vector<bool>& encoding);
 			
-			//creates a lookup table using the given encoder and using the given twist sequences
-			//to create the state-space	
+			//creates a lookup table of the twists needed move a cube from one stage to the next stage. The allowed twist sequences
+			//for the stage and the encoder function for the stage are taken as paramaters
 			LookupTable create_lookup_table(const Encoder encoder, const std::vector<TwistSequence> twist_sequences);
 
-			//notifies the twist listeners of the twists in the given twist sequence and performs those
-			//twists on the given cube object
+			//performs a binary search on the entries in the given memory-mapped lookup table file to find the twists needed
+			//to solve the cube represented by 'target_encoding'
+			std::vector<cube::Twist> find_table_entry(const std::vector<bool>& target_encoding, const boost::iostreams::mapped_file_source& table);
+
+			//notifies the twist listeners of an object of the twists contained in 'twist_sequence'
+			//and performs those twists on 'comb_cube'
 			void execute_partial_solution(const TwistSequence& twist_sequence, cube::CombinedCube& comb_cube);
 
 		public:
-			//constructor loads the lookup tables
+			//constructor generates the lookup tables if they are not already generated
 			ThreeCubeSolver();
 
-			//solves the given cube object and returns a vector that contains the twists that were made
-			//to solve the cube
+			//solves the given cube object and notifies any twist listeners of the twists 
+			//found to solve the cube
 			void solve(const cube::CombinedCube& comb_cube);
 	};
 }

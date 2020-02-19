@@ -10,39 +10,42 @@
 #include <cmath>
 #include <algorithm>
 #include <iostream>
-#include <fstream>
-#include <boost/filesystem.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/archive/binary_iarchive.hpp>
 
 using namespace ai;
-ThreeCubeSolver::ThreeCubeSolver() {
-	using namespace cube;
-	std::array<std::string, stage_count> filenames = {
-		"g1_table.bin",
-		"g2_table.bin",
-		"g3_table.bin",
-		"g4_table.bin",
-	};
 
+ThreeCubeSolver::ThreeCubeSolver() : twist_mappings(create_twist_mappings()), table_dir("tables") {
+	using namespace cube;
 	std::array<std::unordered_set<cube::Face>, stage_count> restricted_faces = {{
 		{},
 		{Face::TOP, Face::BOTTOM},	
 		{Face::TOP, Face::BOTTOM, Face::FRONT, Face::BACK},
 		{Face::TOP, Face::BOTTOM, Face::FRONT, Face::BACK, Face::LEFT, Face::RIGHT},
 	}};
-
+	if (!boost::filesystem::exists(table_dir)) {
+		boost::filesystem::create_directory(table_dir);
+	}
 	for (int stage = 0; stage < stage_count; stage++) {
-		auto file_path = table_dir+filenames[stage];
-		if (!load_lookup_table(tables[stage], file_path)) {
-			tables[stage] = create_lookup_table(encoders[stage], generate_twist_sequences(restricted_faces[stage]));
-			save_lookup_table(tables[stage], file_path);
+		auto file_path = table_dir/filenames[stage];
+		if (!boost::filesystem::exists(file_path)) {
+			std::cout << "Generating table for stage " << stage << ". This may take some time."  << "\n";
+			save_lookup_table(create_lookup_table(encoders[stage], generate_twist_sequences(restricted_faces[stage])), file_path.string());
 			std::cout << "Table for stage " << stage << " generated\n";
 		}
-		else {
-			std::cout << "Loading table for stage " << stage << " complete\n";
-		}
 	}
+}
+
+ThreeCubeSolver::TwistEncodingMap ThreeCubeSolver::create_twist_mappings() {
+		TwistEncodingMap twist_mappings;
+		char encoding = 0;
+		for (const auto face : cube::ALL_FACES) {
+			for (const int degrees : TwistUtils::DEGREES) {
+				encoding++;
+				twist_mappings.insert(TwistEncodingMap::value_type(cube::Twist(degrees, face), encoding));
+			}
+		}
+
+		return twist_mappings;
+
 }
 
 std::vector<cube::Twist> ThreeCubeSolver::orient_cube(const cube::CubeCenters& centers) {
@@ -213,26 +216,29 @@ std::vector<TwistSequence> ThreeCubeSolver::generate_twist_sequences(const std::
 	return twist_sequences;
 }
 
-bool ThreeCubeSolver::load_lookup_table(std::unordered_map<std::vector<bool>, std::vector<cube::Twist>>& table, std::string file_path) {
-	if (!boost::filesystem::exists(table_dir)) {
-		boost::filesystem::create_directory(table_dir);
+void ThreeCubeSolver::save_lookup_table(const ThreeCubeSolver::LookupTable& table, std::string file_path) {
+	typedef std::pair<std::vector<char>, std::vector<cube::Twist>> TableEntry;
+	std::vector<TableEntry> sorted_entries;
+	for (const auto& entry : table) {
+		sorted_entries.push_back(std::make_pair(convert_encoding(entry.first), entry.second));
 	}
-
-	if (boost::filesystem::exists(file_path)) {
-		std::ifstream in_stream(file_path);
-		boost::archive::binary_iarchive loader(in_stream);
-		loader >> table;
-
-		return true;
+	auto entry_compare = [](const TableEntry& lhs, const TableEntry& rhs) {
+		return lhs.first < rhs.first;
+	};
+	std::sort(sorted_entries.begin(), sorted_entries.end(), entry_compare);
+	
+	std::ofstream file(file_path, std::ofstream::binary);
+	for (const auto& entry : sorted_entries) {
+		file.write(&entry.first[0], entry.first.size());
+		std::vector<char> twists_encoding;
+		for (const auto& twist : entry.second) {
+			twists_encoding.push_back(twist_mappings.left.at(twist));
+		}
+		while (twists_encoding.size() < twists_encoding_length) {
+			twists_encoding.push_back(0);	
+		}
+		file.write(&twists_encoding[0], twists_encoding.size());
 	}
-
-	return false;
-}
-
-void ThreeCubeSolver::save_lookup_table(const std::unordered_map<std::vector<bool>, std::vector<cube::Twist>>& table, std::string file_path) {
-	std::ofstream out_stream(file_path);
-	boost::archive::binary_oarchive saver(out_stream);
-	saver << table;
 }
 
 void ThreeCubeSolver::build_encoding(std::vector<bool>& encoding, const uint8_t data, const int bits) {
@@ -298,6 +304,27 @@ std::vector<bool> ThreeCubeSolver::encode_g4(const cube::Cube& cube) {
 	return encoding;
 }
 
+std::vector<char> ThreeCubeSolver::convert_encoding(const std::vector<bool>& encoding) {
+	uint8_t buffer = 0;
+	uint8_t buffer_index = 0;
+	std::vector<char> converted_encoding;
+	for (const bool b : encoding) {
+		buffer |= b << buffer_index;
+		buffer_index++;
+		if (buffer_index == 8) {
+			converted_encoding.push_back(buffer);
+			buffer = 0;
+			buffer_index = 0;
+		}
+	}
+	converted_encoding.push_back(buffer);
+	while (converted_encoding.size() < cube_encoding_length) {
+		converted_encoding.push_back(0);
+	}
+	
+	return converted_encoding;
+}
+
 std::unordered_map<std::vector<bool>, std::vector<cube::Twist>> ThreeCubeSolver::create_lookup_table(
 			const std::function<std::vector<bool>(const cube::Cube&)> encoder, 
 			const std::vector<TwistSequence> twist_sequences) {
@@ -326,6 +353,37 @@ std::unordered_map<std::vector<bool>, std::vector<cube::Twist>> ThreeCubeSolver:
 		return table;
 }
 
+std::vector<cube::Twist> ThreeCubeSolver::find_table_entry(
+		const std::vector<bool>& target_encoding,
+		const boost::iostreams::mapped_file_source& table) {
+
+	auto converted_encoding = convert_encoding(target_encoding);
+	const char* lower_bound = table.begin();
+	const char* upper_bound = table.end()-table_entry_length;
+	while (1) {
+		int table_entries_in_range = std::distance(lower_bound, upper_bound)/table_entry_length;
+		auto pivot = lower_bound + (table_entries_in_range/2)*table_entry_length;
+		if (std::equal(pivot, pivot+cube_encoding_length, &converted_encoding[0])) {
+			std::vector<cube::Twist> solution;
+			for (int i = cube_encoding_length; i < table_entry_length; i++) {
+				if (pivot[i] == 0) {
+					break;
+				}
+				solution.push_back(twist_mappings.right.at(pivot[i]));
+			}
+
+			return solution;
+		}
+		else if (std::lexicographical_compare(pivot, pivot+cube_encoding_length, 
+					&converted_encoding[0], &converted_encoding[0]+cube_encoding_length)) {
+			lower_bound = pivot+table_entry_length;
+		}
+		else {
+			upper_bound = pivot-table_entry_length;
+		}
+	}
+}
+
 void ThreeCubeSolver::execute_partial_solution(const TwistSequence& twist_sequence, cube::CombinedCube& comb_cube) {
 	notify_listeners(twist_sequence);
 	for (const auto& twist : twist_sequence) {
@@ -338,8 +396,11 @@ void ThreeCubeSolver::solve(const cube::CombinedCube& comb_cube) {
 
 	execute_partial_solution(orient_cube(comb_cube.get_cube_centers()), curr_state);
 	execute_partial_solution(solve_parity(curr_state.get_cube()), curr_state);
+
 	for (int stage = 0; stage < stage_count; stage++) {
-		execute_partial_solution(tables[stage][encoders[stage](curr_state.get_cube())], curr_state);
+		auto table_path = table_dir/filenames[stage];
+		boost::iostreams::mapped_file_source table(table_path.string());
+		execute_partial_solution(find_table_entry(encoders[stage](comb_cube.get_cube()), table), curr_state);
 		std::cout << "Stage " << stage << " complete\n";
 	}
 }
