@@ -2,7 +2,6 @@
 #define TWIST_H
 
 #include <cassert>
-#include <ostream>
 #include "face.h"
 
 namespace cube {
@@ -45,40 +44,11 @@ namespace cube {
 
 		bool operator!=(const Twist& twist) const {return !(*this == twist);}
 
-		template<class Archive>
-		void serialize(Archive &ar, const unsigned version) {}
 	};
 	
 	inline std::ostream &operator<<(std::ostream& stream, const cube::Twist& twist) {
 		stream << "Degrees: " << twist.degrees << " Face: " << twist.face << " Layer: " << twist.layer << " Wide Turn: " << twist.wide_turn;
 		return stream;
-	}
-}
-
-namespace boost {
-	namespace serialization {
-		template<class Archive>
-		inline void save_construct_data(Archive& ar, const cube::Twist* t, const unsigned file_version) {
-			ar << t -> degrees;	
-			ar << t -> face;	
-			ar << t -> layer;	
-			ar << t -> wide_turn;	
-		}
-
-		template<class Archive>
-		inline void load_construct_data(Archive& ar, cube::Twist* t, const unsigned file_version) {
-			int degrees;
-			cube::Face face;
-			int layer;
-			bool wide_turn;
-
-			ar >> degrees;
-			ar >> face;
-			ar >> layer;
-			ar >> wide_turn;
-
-			::new(t)cube::Twist(degrees, face, layer, wide_turn);
-		}
 	}
 }
 
