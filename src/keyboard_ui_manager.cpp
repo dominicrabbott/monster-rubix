@@ -61,9 +61,9 @@ bool KeyboardUIManager::keyReleased(const OgreBites::KeyboardEvent& event) {
 
 
 void KeyboardUIManager::twist() {
-	static std::string faces("([RrLlDdTtFfBb])");
-	static std::regex form1(faces);
-	static std::regex form2("(\\d+)" + faces + "(w?)");
+	std::string faces("([RrLlDdTtFfBb])");
+	std::regex form1(faces);
+	std::regex form2("(\\d+)" + faces + "(w?)");
 
 	char face_char;
 	std::string layer_str;
