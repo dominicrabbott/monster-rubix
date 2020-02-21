@@ -111,7 +111,6 @@ void KeyboardUIManager::twist() {
 
 		layer = std::stoi(layer_str) - 1;
 		
-		int size=2;
 		if (layer < size) {
 			cube::Twist move(degrees, face, layer, wide_turn);
 
